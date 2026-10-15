@@ -1,0 +1,385 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>식품 표시·광고 도우미</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap">
+<style>
+/* 데모 화면(claude.ai artifact) 디자인을 그대로 옮기고, 식품 종류 선택을 두 칸 토글로 바꿈 */
+:root{
+  --bg:#EEF1F6;--surface:#FFFFFF;--surface2:#F4F6FA;--ink:#15202E;--muted:#58677B;--line:#D8DFEA;
+  --accent:#1F5FA8;--on-accent:#FFFFFF;--accent-bg:#E3EDFA;
+  --bad:#A32A1F;--bad-bg:#FBE4E0;--ok:#2C6B3B;--ok-bg:#E1F1E5;--warn:#7A5200;--warn-bg:#FFF0C7;--none:#3B4A63;--none-bg:#E8ECF2;
+  --f-body:"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root{
+  --bg:#0E131B;--surface:#151C27;--surface2:#1B2431;--ink:#E7EDF5;--muted:#9DAEC4;--line:#273448;
+  --accent:#7DB3F0;--on-accent:#0E131B;--accent-bg:#162A44;
+  --bad:#FF9B8E;--bad-bg:#43201C;--ok:#8FD7A2;--ok-bg:#183222;--warn:#F0C25A;--warn-bg:#3A2D0E;--none:#B7C4DB;--none-bg:#232C3B;
+  color-scheme:dark}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.6;padding:0 16px}
+h1,h2,h4,p{margin:0}
+button,input{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.wrap{max-width:1080px;margin:0 auto}
+.top{margin:0 -16px;padding:12px 16px;background:var(--surface);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
+.brand{display:flex;align-items:center;gap:12px}
+.mark{flex:none;width:38px;height:38px;border-radius:10px;background:var(--accent);display:grid;place-items:center}
+.mark svg{stroke:var(--on-accent)}
+.brand h1{font-size:18px;font-weight:700;line-height:1.25}
+.brand small{display:block;font-size:12.5px;color:var(--muted)}
+.layout{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(0,1fr);gap:16px;padding:24px 0 8px;align-items:start}
+@media (max-width:860px){.layout{grid-template-columns:minmax(0,1fr)}}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;min-width:0}
+.chat{display:flex;flex-direction:column}
+.row{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;padding:12px 20px;border-bottom:1px solid var(--line)}
+.row .lbl{font-size:13px;font-weight:600;color:var(--muted)}
+.row small{font-size:12.5px;color:var(--muted)}
+.seg{display:inline-flex;border:1.5px solid var(--line);border-radius:10px;overflow:hidden}
+.seg.empty{border-color:var(--accent)}
+.seg button{min-height:42px;padding:0 18px;border:0;background:var(--surface2);cursor:pointer;font-weight:600}
+.seg button+button{border-left:1.5px solid var(--line)}
+.seg button[aria-checked="true"]{background:var(--accent);color:var(--on-accent)}
+.useb{min-height:36px;padding:0 14px;border-radius:999px;border:1.5px solid var(--line);background:var(--surface);cursor:pointer;font-size:14px}
+.useb[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-bg);color:var(--accent);font-weight:600}
+.log{display:flex;flex-direction:column;gap:14px;padding:20px;height:clamp(380px,58vh,580px);overflow-y:auto;overscroll-behavior:contain}
+.msg{display:flex;flex-direction:column;gap:8px;min-width:0}
+.msg.user{align-self:flex-end;max-width:86%}
+.bubble{padding:10px 14px;border-radius:14px;overflow-wrap:anywhere}
+.msg.user .bubble{background:var(--accent);color:var(--on-accent);border-bottom-right-radius:4px}
+.msg.bot .bubble{background:var(--surface2);border:1px solid var(--line);border-bottom-left-radius:4px;align-self:flex-start}
+.divider{align-self:center;font-size:12.5px;color:var(--muted);background:var(--surface2);border:1px solid var(--line);padding:3px 12px;border-radius:999px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chips-label{font-size:12.5px;color:var(--muted);font-weight:600}
+.chip{min-height:40px;padding:6px 14px;border-radius:999px;border:1px solid var(--line);background:var(--surface);cursor:pointer;font-size:14px;text-align:left}
+.chip:hover{border-color:var(--accent);background:var(--accent-bg)}
+.chip.scope{border-style:dashed}
+.chip.scope i{font-style:normal;font-size:12px;font-weight:600;color:var(--warn);margin-right:6px}
+.typing{display:flex;gap:5px;padding:14px}
+.typing i{width:7px;height:7px;border-radius:50%;background:var(--muted);animation:blink 1s infinite ease-in-out}
+.typing i:nth-child(2){animation-delay:.15s}.typing i:nth-child(3){animation-delay:.3s}
+@keyframes blink{0%,80%,100%{opacity:.25}40%{opacity:1}}
+@media (prefers-reduced-motion:reduce){.typing i{animation:none;opacity:.6}}
+.ans{background:var(--surface);border:1px solid var(--line);border-radius:14px;border-bottom-left-radius:4px;padding:16px 18px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.ans-head{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.tag{font-size:12.5px;font-weight:600;padding:2px 10px;border-radius:6px;background:var(--surface2);color:var(--muted);border:1px solid var(--line)}
+.v{font-size:13px;font-weight:700;padding:3px 12px;border-radius:999px;display:inline-flex;align-items:center;gap:6px}
+.v::before{content:"";width:8px;height:8px;border-radius:50%;background:currentColor}
+.v-high{background:var(--bad-bg);color:var(--bad)}
+.v-low{background:var(--ok-bg);color:var(--ok)}
+.v-unsure{background:var(--warn-bg);color:var(--warn)}
+.v-out_of_scope{background:var(--none-bg);color:var(--none)}
+.concl{font-size:15.5px;font-weight:600;line-height:1.55;overflow-wrap:anywhere}
+.raw{white-space:pre-wrap;font-size:14px;color:var(--muted);overflow-wrap:anywhere}
+.ans h4{font-size:12.5px;font-weight:700;color:var(--muted)}
+.ans ol,.ans ul{margin:4px 0 0;padding-left:20px;display:flex;flex-direction:column;gap:5px}
+.ans ul.basis{list-style:none;padding:0;gap:8px}
+.basis li{display:grid;grid-template-columns:auto minmax(0,1fr);gap:10px;align-items:start;font-size:14px}
+.art{font-size:12px;font-weight:600;padding:2px 9px;border-radius:6px;background:var(--surface2);border:1px solid var(--line);white-space:nowrap;color:var(--muted)}
+.foot{font-size:12.5px;color:var(--muted);border-top:1px solid var(--line);padding-top:10px}
+.act{align-self:flex-start;min-height:40px;padding:0 14px;border-radius:8px;border:1px solid var(--accent);background:var(--accent-bg);color:var(--accent);font-weight:600;cursor:pointer}
+.composer{display:flex;gap:8px;padding:14px 20px 4px;border-top:1px solid var(--line)}
+.composer input{flex:1;min-width:0;min-height:46px;padding:0 14px;border-radius:10px;border:1.5px solid var(--line);background:var(--surface)}
+.composer button{min-height:46px;padding:0 20px;border-radius:10px;border:0;background:var(--accent);color:var(--on-accent);font-weight:600;cursor:pointer}
+.composer :disabled{opacity:.55;cursor:not-allowed}
+.under{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:6px 20px 14px;font-size:12.5px;color:var(--muted)}
+.linkbtn{border:0;background:none;color:var(--accent);font-weight:600;cursor:pointer;padding:0;text-decoration:underline;text-underline-offset:3px}
+.side{display:flex;flex-direction:column;gap:16px}
+.side .card{padding:18px 20px;display:flex;flex-direction:column;gap:10px}
+.side h2{font-size:15px;font-weight:700}
+.side ul{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:4px;font-size:14px}
+.side .out{color:var(--muted)}
+.sub{font-size:12.5px;font-weight:700;color:var(--muted)}
+.legend{display:flex;flex-direction:column;gap:8px;font-size:13.5px}
+.legend div{display:flex;gap:10px;align-items:flex-start}
+.legend .v{flex:none;font-size:12.5px;padding:2px 10px}
+details summary{cursor:pointer;font-weight:600;font-size:14px}
+.laws{display:grid;gap:3px;margin-top:6px;font-size:13.5px}
+.laws span{display:flex;justify-content:space-between;gap:10px;border-bottom:1px solid var(--line);padding-block:4px}
+.laws em{font-style:normal;color:var(--muted);font-size:12.5px;white-space:nowrap}
+footer{margin-top:32px;border-top:1px solid var(--line);padding:20px 0 36px;font-size:12.5px;color:var(--muted)}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="wrap brand">
+    <span class="mark"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 3h6l1 4H8l1-4z"/><path d="M8 7h8v12a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2V7z"/><path d="M10 12h4M10 16h4"/></svg></span>
+    <div><h1>식품 표시·광고 도우미 챗봇</h1><small>메뉴판·상세페이지·SNS 문구가 법에 걸릴 수 있는지 근거 조문과 함께 안내</small></div>
+  </div>
+</header>
+
+<main class="wrap layout">
+  <section class="card chat" aria-label="챗봇 대화">
+    <div class="row">
+      <span class="lbl" id="kind-label">식품 종류</span>
+      <div class="seg empty" id="seg" role="radiogroup" aria-labelledby="kind-label">
+        <button type="button" role="radio" aria-checked="false" id="kind-general" data-kind="general">일반식품</button>
+        <button type="button" role="radio" aria-checked="false" id="kind-health" data-kind="health">건강기능식품</button>
+      </div>
+      <small id="kind-hint">먼저 식품 종류를 선택하세요</small>
+    </div>
+    <div class="row" role="group" aria-label="문구를 쓸 곳">
+      <span class="lbl">사용처</span>
+      <button type="button" class="useb" data-use="menu" aria-pressed="false">메뉴판</button>
+      <button type="button" class="useb" data-use="page" aria-pressed="false">상세페이지</button>
+      <button type="button" class="useb" data-use="sns" aria-pressed="false">SNS 홍보 문구</button>
+      <small>선택 사항 · 다시 누르면 해제</small>
+    </div>
+    <div class="log" id="log" role="log" aria-live="polite" aria-label="대화 내용"></div>
+    <form class="composer" id="form" autocomplete="off">
+      <input type="text" id="q" maxlength="2000" disabled placeholder="먼저 식품 종류를 선택하세요" aria-label="광고 문구 또는 질문 입력">
+      <button type="submit" id="send" disabled>점검</button>
+    </form>
+    <div class="under"><span id="hint">식품 종류를 선택하면 문구를 입력할 수 있어요.</span><button type="button" class="linkbtn" id="clear">대화 지우기</button></div>
+  </section>
+
+  <aside class="side" aria-label="안내">
+    <div class="card">
+      <h2>이런 분이 쓰세요</h2>
+      <ul><li>카페·음식점·반찬가게 운영자 <span class="out">— 메뉴판, SNS</span></li><li>온라인 식품 판매자 <span class="out">— 상세페이지, SNS</span></li></ul>
+      <p class="sub">예: “면역력 강화”, “다이어트 효과”, “혈당 관리”</p>
+    </div>
+    <div class="card">
+      <h2>안내하는 범위</h2>
+      <p class="sub">다루는 주제</p>
+      <ul><li>광고 문구가 부당한 표시·광고에 해당할 수 있는지</li><li>건강기능식품 기능성 표현의 범위</li></ul>
+      <p class="sub">범위 밖</p>
+      <ul class="out"><li>표시사항 항목 안내</li><li>영업 신고·인허가, 위생 기준</li><li>세금, 사업자등록</li><li>화장품·의약품 광고</li><li>위법 단정, 행정처분 결과 예측</li></ul>
+    </div>
+    <div class="card">
+      <h2>판단 단계</h2>
+      <div class="legend">
+        <div><span class="v v-high">위반 소지 큼</span><span>조문에 비추어 문제 될 가능성이 높음</span></div>
+        <div><span class="v v-unsure">판단 어려움</span><span>맥락이나 제품 정보가 필요함</span></div>
+        <div><span class="v v-low">위반 소지 낮음</span><span>사실에 맞는 표현이면 일반적으로 문제 적음</span></div>
+        <div><span class="v v-out_of_scope">범위 밖</span><span>이 챗봇이 점검하지 않는 질문</span></div>
+      </div>
+      <p class="sub">“위법입니다”처럼 단정하지 않아요.</p>
+    </div>
+    <div class="card">
+      <h2>근거 자료</h2>
+      <details>
+        <summary>목록 보기</summary>
+        <div class="laws">
+          <span>식품 등의 표시·광고에 관한 법률<em>법률</em></span><span>같은 법 시행령<em>시행령</em></span><span>같은 법 시행규칙<em>시행규칙</em></span>
+          <span>건강기능식품에 관한 법률<em>법률</em></span><span>같은 법 시행령<em>시행령</em></span><span>같은 법 시행규칙<em>시행규칙</em></span>
+          <span>식품위생법 (영업자 준수사항)<em>법률</em></span><span>식품위생법 시행규칙 (영업자 준수사항)<em>시행규칙</em></span>
+          <span>식약처 고시: 부당한 표시 또는 광고의 내용 기준<em>행정규칙</em></span>
+          <span>식약처 고시: 건강기능식품의 기준 및 규격<em>행정규칙</em></span>
+          <span>식품안전나라 건강기능식품 인정 기능성 (I-0040, I-0050)<em>식약처</em></span>
+        </div>
+      </details>
+    </div>
+  </aside>
+</main>
+
+<footer><div class="wrap">식품 표시·광고 도우미 챗봇 · 법령 출처: 법제처 OpenAPI · 인정 기능성 출처: 식약처 식품안전나라</div></footer>
+
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var KIND = { general: '일반식품', health: '건강기능식품' };
+  var USE = { menu: '메뉴판', page: '상세페이지', sns: 'SNS' };
+  var VERDICT = { high: '위반 소지 큼', low: '위반 소지 낮음', unsure: '판단 어려움', out_of_scope: '범위 밖' };
+  var CHIPS = {
+    general: [
+      { q: 'SNS에 “면역력 강화에 좋아요”라고 올려도 되나요?', u: 'sns' },
+      { q: '상세페이지에 “다이어트 효과”라고 써도 되나요?', u: 'page' },
+      { q: '메뉴판에 “혈당 관리 샐러드”라고 써도 되나요?', u: 'menu' },
+      { q: '“천연 무첨가”라고 써도 되나요?', u: 'page' }
+    ],
+    health: [
+      { q: '상세페이지에 “혈당 관리에 도움”이라고 써도 되나요?', u: 'page' },
+      { q: 'SNS에 “체지방 감소에 도움을 줄 수 있음”이라고 써도 되나요?', u: 'sns' },
+      { q: '인정된 기능성 표현만 써야 하나요?', u: 'sns' },
+      { q: '“고혈압을 치료합니다”라고 써도 되나요?', u: 'page' }
+    ]
+  };
+  var SCOPE_Q = '식품 제조업 영업신고는 어떻게 하나요?';
+  var TIMEOUT_MS = 200000;
+
+  var st = { sel: null, use: null, busy: false };
+  var log = $('log'), inp = $('q'), send = $('send');
+
+  /* 답변 내용은 모두 textContent 로만 넣는다 (LLM 출력·법령 본문에 HTML이 섞여도 글자로 보이게) */
+  function el(tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
+  function toBottom() { log.scrollTop = log.scrollHeight; }
+  function botBubble(text) { var m = el('div', 'msg bot'); m.appendChild(el('div', 'bubble', text)); log.appendChild(m); toBottom(); return m; }
+  function userBubble(text) { var m = el('div', 'msg user'); m.appendChild(el('div', 'bubble', text)); log.appendChild(m); toBottom(); }
+
+  function setBusy(b) {
+    st.busy = b;
+    inp.disabled = b || !st.sel;
+    send.disabled = b || !st.sel;
+  }
+
+  function setUse(k) {
+    st.use = k;
+    Array.prototype.forEach.call(document.querySelectorAll('.useb'), function (x) {
+      x.setAttribute('aria-pressed', String(x.getAttribute('data-use') === k));
+    });
+  }
+
+  function detectUse(raw) {
+    var s = raw.replace(/\s+/g, '').toLowerCase();
+    if (/메뉴판|메뉴명|메뉴에/.test(s)) return 'menu';
+    if (/상세페이지|상세설명|쇼핑몰|스마트스토어/.test(s)) return 'page';
+    if (/sns|인스타|블로그|홍보문구|게시글|해시태그/.test(s)) return 'sns';
+    return null;
+  }
+
+  function chipsFor(k) {
+    var m = botBubble('‘' + KIND[k] + '’ 기준으로 점검할게요. 예시를 눌러 보거나 광고 문구를 직접 입력해 보세요.');
+    m.appendChild(el('span', 'chips-label', '예시 문구·질문'));
+    var wrap = el('div', 'chips');
+    CHIPS[k].forEach(function (x) {
+      var c = el('button', 'chip', x.q); c.type = 'button';
+      c.addEventListener('click', function () { setUse(x.u); ask(x.q); });
+      wrap.appendChild(c);
+    });
+    var sc = el('button', 'chip scope'); sc.type = 'button';
+    sc.appendChild(el('i', null, '범위 밖 예시')); sc.appendChild(document.createTextNode(SCOPE_Q));
+    sc.addEventListener('click', function () { ask(SCOPE_Q); });
+    wrap.appendChild(sc);
+    m.appendChild(wrap); toBottom();
+  }
+
+  function setKind(k) {
+    var first = st.sel === null;
+    st.sel = k;
+    Array.prototype.forEach.call(document.querySelectorAll('#seg button'), function (b) {
+      b.setAttribute('aria-checked', String(b.getAttribute('data-kind') === k));
+    });
+    $('seg').classList.remove('empty');
+    $('kind-hint').textContent = '언제든 바꿀 수 있어요';
+    inp.placeholder = '예: ' + CHIPS[k][0].q;
+    $('hint').textContent = '선택한 식품 종류: ' + KIND[k];
+    setBusy(st.busy);
+    if (first) { chipsFor(k); inp.focus(); }
+    else { log.appendChild(el('div', 'divider', '식품 종류를 ‘' + KIND[k] + '’(으)로 바꿨어요')); toBottom(); }
+  }
+
+  function renderAnswer(a, sel, use, q) {
+    var m = el('div', 'msg bot');
+    var box = el('article', 'ans');
+    var head = el('div', 'ans-head');
+    head.appendChild(el('span', 'v v-' + a.verdict, VERDICT[a.verdict] || a.verdict));
+    if (a.verdict !== 'out_of_scope') {
+      head.appendChild(el('span', 'tag', KIND[sel]));
+      if (use) head.appendChild(el('span', 'tag', USE[use]));
+    }
+    box.appendChild(head);
+    if (a.verdict_reason) box.appendChild(el('p', 'concl', a.verdict_reason));
+    if (a.raw_fallback) box.appendChild(el('p', 'raw', a.raw_fallback));
+
+    if (a.actions && a.actions.length) {
+      var outScope = a.verdict === 'out_of_scope';
+      box.appendChild(el('h4', null, outScope ? '안내' : '해야 할 일'));
+      var list = el(outScope ? 'ul' : 'ol');
+      a.actions.forEach(function (s) { list.appendChild(el('li', null, s)); });
+      box.appendChild(list);
+    }
+
+    if (a.basis && a.basis.length) {
+      box.appendChild(el('h4', null, '근거'));
+      var ul = el('ul', 'basis');
+      a.basis.forEach(function (b) {
+        var li = el('li'), d = el('div');
+        if (b.type === 'law') {
+          li.appendChild(el('span', 'art', b.article));
+          d.appendChild(el('b', null, b.law_name));
+        } else {
+          li.appendChild(el('span', 'art', '제' + b.recog_no + '호'));
+          d.appendChild(el('b', null, b.material));
+          d.appendChild(document.createTextNode(' · 인정 문구: ' + b.claim));
+        }
+        if (b.summary) d.appendChild(document.createTextNode(' · ' + b.summary));
+        li.appendChild(d); ul.appendChild(li);
+      });
+      box.appendChild(ul);
+    }
+
+    if (a.food_type_mismatch) {
+      var other = sel === 'general' ? 'health' : 'general';
+      var act = el('button', 'act', '‘' + KIND[other] + '’으로 바꾸고 다시 점검'); act.type = 'button';
+      act.addEventListener('click', function () {
+        if (st.busy) return;
+        setKind(other); userBubble(q); reply(q);
+      });
+      box.appendChild(act);
+    }
+
+    box.appendChild(el('p', 'foot', '수집 기준일 ' + (a.collected_at || '-') + ' · ' + a.disclaimer));
+    m.appendChild(box); log.appendChild(m); toBottom();
+  }
+
+  function errorText(body, status) {
+    var d = body && body.detail;
+    if (typeof d === 'string') return d;
+    if (status === 422) return '입력값을 확인해 주세요.';
+    return 'HTTP ' + status;
+  }
+
+  function reply(q) {
+    var sel = st.sel, use = st.use;
+    var m = el('div', 'msg bot'); var t = el('div', 'bubble typing'); t.setAttribute('aria-label', '점검 중');
+    t.appendChild(el('i')); t.appendChild(el('i')); t.appendChild(el('i')); m.appendChild(t);
+    log.appendChild(m); toBottom();
+    setBusy(true);
+    var ctrl = new AbortController();
+    var timer = setTimeout(function () { ctrl.abort(); }, TIMEOUT_MS);
+    fetch('/rag/query', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ query: q, food_type: sel, usage: use }),
+      signal: ctrl.signal
+    })
+      .then(function (r) {
+        return r.text().then(function (text) {
+          var body = {};
+          try { body = JSON.parse(text); } catch (e) { body = {}; }
+          if (!r.ok) throw new Error(errorText(body, r.status));
+          return body;
+        });
+      })
+      .then(function (a) { m.remove(); renderAnswer(a, sel, use, q); })
+      .catch(function (e) {
+        m.remove();
+        botBubble('답변을 받지 못했어요. 잠시 후 다시 시도해 주세요. (' + (e.name === 'AbortError' ? '응답 시간이 초과됐어요' : e.message) + ')');
+      })
+      .finally(function () { clearTimeout(timer); setBusy(false); inp.focus(); });
+  }
+
+  function ask(q) {
+    q = (q || '').trim();
+    if (!q || !st.sel || st.busy) return;
+    var d = detectUse(q); if (d) setUse(d);
+    userBubble(q); reply(q);
+  }
+
+  Array.prototype.forEach.call(document.querySelectorAll('#seg button'), function (b) {
+    b.addEventListener('click', function () {
+      var k = b.getAttribute('data-kind');
+      if (k !== st.sel && !st.busy) setKind(k);
+    });
+  });
+  Array.prototype.forEach.call(document.querySelectorAll('.useb'), function (x) {
+    x.addEventListener('click', function () { var k = x.getAttribute('data-use'); setUse(st.use === k ? null : k); });
+  });
+  $('form').addEventListener('submit', function (e) { e.preventDefault(); var v = inp.value; inp.value = ''; ask(v); });
+
+  function intro() {
+    log.innerHTML = '';
+    botBubble('안녕하세요. 카페·음식점·반찬가게, 온라인 식품 판매자의 메뉴판·상세페이지·SNS 문구가 부당한 표시·광고에 해당할 수 있는지 법령 근거와 함께 안내해 드려요. 먼저 위에서 식품 종류를 선택해 주세요.');
+    if (st.sel) chipsFor(st.sel);
+  }
+  $('clear').addEventListener('click', function () { if (!st.busy) intro(); });
+  intro();
+})();
+</script>
+</body>
+</html>
