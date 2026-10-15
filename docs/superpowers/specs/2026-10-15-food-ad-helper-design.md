@@ -107,6 +107,8 @@ ADMRUL_MAP = {       # 행정규칙 ID → 메타데이터. ID는 target=admrul 
 3. `diffAndSnapshot()`: `content_hash` 비교로 바뀐 조문만 다시 인덱싱. 변경 이력은 `logs/law_history.jsonl`에 한 줄씩 기록(`recordLawHistory` 대체).
 4. 실행 결과는 `logs/collect.jsonl`에 기록(`recordLog` 대체). `updateLawMeta`는 없앤다.
 
+이력 기록은 모두 `food_common.appendLog(kind, record)` 한 함수만 거친다(`kind`: `collect` | `law_history`). 수집 스크립트는 저장 위치를 모른다. 나중에 OpenSearch `collect-log` 인덱스로 옮기려면 이 함수 안쪽만 `osClient.index()`로 바꾸고, 기존 jsonl은 한 번 읽어 bulk 적재하면 된다.
+
 ### 4.3 고시 수집 (`collect_admrul.py`)
 
 - `lawService.do?target=admrul&ID=<ID>&type=JSON` 호출, `data/law/admrul_<ID>.json` 저장.
