@@ -134,3 +134,171 @@ def fixByteFallbackTokens(text):
         raw = bytes(int(h, 16) for h in re.findall(r'0x([0-9A-Fa-f]{2})', m.group(0)))
         return raw.decode("utf-8", errors="replace")
     return _BYTE_TOKEN_RE.sub(repl, text)
+
+
+# ============================================================
+# LLM 출력 파싱
+# ============================================================
+
+VERDICT_MAP = {"큼": "high", "낮음": "low", "어려움": "unsure", "범위밖": "out_of_scope"}
+VERDICT_ORDER = ("범위밖", "어려움", "낮음", "큼")   # "판단하기 어려움"이 "큼"보다 먼저 걸리도록
+
+OUT_OF_SCOPE_ACTIONS = {
+    "topic": [
+        "이 챗봇은 식품·건강기능식품의 표시·광고 문구만 점검합니다.",
+        "영업 신고·인허가는 관할 시·군·구청, 제품 심사·신고는 식품의약품안전처에 문의하세요.",
+    ],
+    "no_basis": [
+        "근거 조문을 찾지 못했습니다.",
+        "관할 시·군·구청 식품 담당 부서나 식품의약품안전처에 문의하세요.",
+    ],
+}
+
+NO_BASIS_PARSED = {
+    "ok": True, "verdict": "out_of_scope", "verdict_reason": "", "actions": [], "basis_refs": [],
+    "out_of_scope_reason": "no_basis", "food_type_mismatch": False,
+}
+
+_TAG_RE        = re.compile(r"\[\s*(판단\s*이유|판단|해야\s*할\s*일|근거|범위\s*밖\s*사유|식품\s*종류)\s*\]")
+_LIST_MARK_RE  = re.compile(r"^\s*(?:\d+\s*[.)]|[-•·*])\s*")
+_REF_LINE_RE   = re.compile(r"^\s*\[?(\d+)\]?\s*(?:[|:：\-–]\s*(.*))?$")
+_REF_LIST_RE   = re.compile(r"^[\d\s,\[\]]+$")
+
+
+def _squash(text):
+    return re.sub(r"\s+", "", text or "")
+
+
+def splitSections(raw):
+    """[태그] 기준으로 나눈 {태그(공백 제거): 내용}. 같은 태그가 다시 나오면 처음 것만."""
+    text    = (raw or "").replace("**", "").replace("【", "[").replace("】", "]")
+    matches = list(_TAG_RE.finditer(text))
+    out     = {}
+    for i, m in enumerate(matches):
+        end = matches[i + 1].start() if i + 1 < len(matches) else len(text)
+        key = _squash(m.group(1))
+        if key not in out:
+            out[key] = text[m.end():end].strip()
+    return out
+
+
+def parseVerdict(value):
+    squashed = _squash(value)
+    for word in VERDICT_ORDER:
+        if word in squashed:
+            return VERDICT_MAP[word]
+    return None
+
+
+def parseActions(value):
+    actions = []
+    for line in (value or "").split("\n"):
+        line = _LIST_MARK_RE.sub("", line).strip()
+        if line:
+            actions.append(line)
+    return actions
+
+
+def parseBasisRefs(value):
+    refs = []
+    for line in (value or "").split("\n"):
+        line = line.strip()
+        if not line:
+            continue
+        if _REF_LIST_RE.match(line):
+            refs += [(int(n), "") for n in re.findall(r"\d+", line)]
+            continue
+        m = _REF_LINE_RE.match(line)
+        if m:
+            refs.append((int(m.group(1)), (m.group(2) or "").strip()))
+    return refs
+
+
+def parseAnswer(raw):
+    """LLM 원문을 구조화. [판단]이 없거나 값을 알 수 없으면 ok=False."""
+    sections = splitSections(raw)
+    verdict  = parseVerdict(sections.get("판단", ""))
+    if verdict is None:
+        return dict(NO_BASIS_PARSED, ok=False, verdict=None, out_of_scope_reason=None)
+    outReason = None
+    if verdict == "out_of_scope":
+        outReason = "no_basis" if "근거없음" in _squash(sections.get("범위밖사유", "")) else "topic"
+    return {
+        "ok":                  True,
+        "verdict":             verdict,
+        "verdict_reason":      sections.get("판단이유", "").strip(),
+        "actions":             parseActions(sections.get("해야할일", "")),
+        "basis_refs":          parseBasisRefs(sections.get("근거", "")),
+        "out_of_scope_reason": outReason,
+        "food_type_mismatch":  "불일치" in _squash(sections.get("식품종류", "")),
+    }
+
+
+# ============================================================
+# 근거 채우기 / 응답 조립
+# ============================================================
+
+def resolveBasis(basisRefs, refTable):
+    """번호 → 근거 항목. refTable에 없는 번호와 중복 번호는 버린다."""
+    items = []
+    used  = []
+    for n, summary in basisRefs:
+        entry = refTable.get(n)
+        if entry is None or n in used:
+            continue
+        used.append(n)
+        if entry["type"] == "law":
+            items.append({
+                "type":           "law",
+                "law_name":       entry["law_name"],
+                "article":        formatArticle(entry["article_no"], entry["clause_no"]),
+                "summary":        summary,
+                "effective_date": entry.get("effective_date"),
+            })
+        else:
+            items.append({
+                "type":     "material",
+                "material": entry["material"],
+                "recog_no": entry["recog_no"],
+                "claim":    " / ".join(entry.get("claims") or []),
+                "summary":  summary,
+            })
+    return items, used
+
+
+def latestCollectedAt(entries):
+    dates = [e.get("collected_at") for e in entries if e.get("collected_at")]
+    return max(dates) if dates else None
+
+
+def buildResponse(parsed, refTable, raw, fallbackCollectedAt=None):
+    """parsed + refTable → API 응답 dict (spec 5.5)."""
+    contextDate = latestCollectedAt(list(refTable.values())) or fallbackCollectedAt
+    resp = {
+        "success":             True,
+        "verdict":             "unsure",
+        "verdict_reason":      "",
+        "actions":             [],
+        "basis":               [],
+        "out_of_scope_reason": None,
+        "food_type_mismatch":  False,
+        "collected_at":        contextDate,
+        "disclaimer":          DISCLAIMER,
+        "raw_fallback":        "",
+    }
+    if not parsed["ok"]:
+        resp["raw_fallback"] = (raw or "").strip()
+        return resp
+
+    resp["verdict_reason"]     = parsed["verdict_reason"]
+    resp["food_type_mismatch"] = parsed["food_type_mismatch"]
+    if parsed["verdict"] == "out_of_scope":
+        reason = parsed["out_of_scope_reason"] or "topic"
+        resp.update(verdict="out_of_scope", out_of_scope_reason=reason,
+                    actions=list(OUT_OF_SCOPE_ACTIONS[reason]))
+        return resp
+
+    items, used = resolveBasis(parsed["basis_refs"], refTable)
+    resp.update(verdict=parsed["verdict"], actions=parsed["actions"], basis=items,
+                collected_at=latestCollectedAt([refTable[n] for n in used]) or contextDate)
+    return resp
