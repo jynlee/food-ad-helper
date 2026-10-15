@@ -29,7 +29,9 @@ food-ad-helper/
 ├─ scripts/
 │  ├─ common/food_common.py        # mazel_common.py에서 PostgreSQL 제거, appendLog() 추가
 │  ├─ collect/
-│  │  ├─ law_map.py                # 수집 대상 표 (LAW_MAP, ADMRUL_MAP)
+│  │  ├─ law_map.py                # 수집 대상 표 (LAW_TARGETS, ADMRUL_TARGETS)
+│  │  ├─ law_parse.py              # 법제처 JSON → 문서 (순수 함수)
+│  │  ├─ law_store.py              # food-law-articles 매핑·비교·적용
 │  │  ├─ collect_law.py            # 법률·시행령·시행규칙 8개 (target=law)
 │  │  ├─ collect_admrul.py         # 고시 2개 (target=admrul)
 │  │  ├─ fetch_foodsafety.py       # src/에서 이동 (원본 수집, 재실행하지 않음)
@@ -46,7 +48,7 @@ food-ad-helper/
 ├─ web/index.html                  # 데모 화면을 옮기고 API 연결
 ├─ data/law/                       # 법제처 원본 JSON (<법령ID>.json)
 ├─ data/foodsafety/                # 현재 그대로
-├─ eval/questions.jsonl · eval_retrieval.py · eval_answers.py · report.md
+├─ eval/questions.jsonl · metrics.py · eval_retrieval.py · eval_answers.py · report_*.md
 ├─ tests/                          # pytest (순수 함수만)
 ├─ logs/                           # collect.jsonl, law_history.jsonl (git 제외)
 ├─ docs/
@@ -83,27 +85,30 @@ QA_CACHE_TTL_SEC=604800
 ### 4.1 수집 대상 표 (`law_map.py`)
 
 ```python
-LAW_MAP = {          # 법제처 법령 ID → 메타데이터. ID는 1일차에 lawSearch.do 목록 조회로 확정
-    "<ID>": {"name": "식품 등의 표시·광고에 관한 법률", "kind": "법률", "food_type": "공통"},
+LAW_TARGETS = [      # 법제처 현행 명칭. ID는 목록 조회(lawSearch.do)로 자동 확인해 data/law/resolved_ids.json 에 저장
+    {"name": "식품 등의 표시·광고에 관한 법률", "kind": "법률", "food_type": "공통"},
     # 2 시행령, 3 시행규칙 → 공통
     # 4 건강기능식품에 관한 법률, 5 시행령, 6 시행규칙 → 건강기능식품
-    # 7 식품위생법, 8 식품위생법 시행규칙 → 일반식품, "articles": ["...", ...] 로 넣을 조문만 지정
-}
-ADMRUL_MAP = {       # 행정규칙 ID → 메타데이터. ID는 target=admrul 목록 조회로 확정
-    "<ID>": {"name": "부당한 표시 또는 광고의 내용 기준", "kind": "고시", "food_type": "공통"},
-    "<ID>": {"name": "건강기능식품의 기준 및 규격", "kind": "고시", "food_type": "건강기능식품"},
-}
+    {"name": "식품위생법", "kind": "법률", "food_type": "일반식품", "articles": ["44"], "annexes": []},
+    {"name": "식품위생법 시행규칙", "kind": "시행규칙", "food_type": "일반식품", "articles": ["57"], "annexes": ["17"]},
+]
+ADMRUL_TARGETS = [   # 행정규칙. target=admrul 목록 조회로 행정규칙일련번호 확인
+    {"name": "부당한 표시 또는 광고의 내용 기준", "kind": "고시", "food_type": "공통"},
+    {"name": "건강기능식품의 기준 및 규격", "kind": "고시", "food_type": "건강기능식품"},
+]
 ```
 
 - `food_type` 값은 `공통` / `일반식품` / `건강기능식품`.
-- `articles`가 있으면 그 조문만 인덱싱하고, 없으면 전체를 인덱싱한다. 식품위생법·시행규칙의 조문 목록은 1일차에 A가 원본을 보고 정한다(영업자 준수사항, 허위표시 금지 등 표시·광고·메뉴 관련 조문).
+- 이름 매칭: 공백·가운뎃점을 빼고 같은 이름을 우선, 없으면 이름을 포함하는 후보가 하나일 때만 고른다. 고를 수 없으면 후보 목록을 보여주고 실패한다.
+- `articles`가 있으면 그 조문만, `annexes`가 있으면 그 별표만 인덱싱한다(빈 리스트는 별표 없음). 식품위생법·시행규칙의 조문 번호(영업자 준수사항 제44조, 식품접객영업자 준수사항 시행규칙 제57조·별표 17)는 1일차에 A가 원본으로 확인한다.
 
 ### 4.2 법령 수집 (`collect_law.py`)
 
 에스테틱 `collect_law.py`의 흐름을 유지한다.
 
 1. `lawService.do?target=law&ID=<ID>&type=JSON` 호출, 응답을 `data/law/<ID>.json`에 저장. `--offline` 옵션이면 API 대신 저장된 파일을 읽는다.
-2. `parseClauses()`: 항 단위 문서 생성, 호·목 내용 이어붙이기 (에스테틱과 동일). `articles` 필터 적용.
+2. `parseClauses()`: 항 단위 문서 생성, 호·목 내용 이어붙이기 (에스테틱과 동일). `조문여부=전문`(장·절 제목)은 건너뛴다. `articles` 필터 적용.
+   `parseAnnexes()`: 별표도 문서로 만든다(식품표시광고법 시행령의 부당한 표시·광고 구체 내용 등이 별표에 있음). 별표 본문은 1,200자 안팎으로 줄 단위로 나눠 `article_no="별표 n"`, `clause_no="0"`으로 저장한다. `LAW_TARGETS`의 `annexes`가 있으면 그 별표만 넣는다.
 3. `diffAndSnapshot()`: `content_hash` 비교로 바뀐 조문만 다시 인덱싱. 변경 이력은 `logs/law_history.jsonl`에 한 줄씩 기록(`recordLawHistory` 대체).
 4. 실행 결과는 `logs/collect.jsonl`에 기록(`recordLog` 대체). `updateLawMeta`는 없앤다.
 
@@ -118,7 +123,7 @@ ADMRUL_MAP = {       # 행정규칙 ID → 메타데이터. ID는 target=admrul 
 
 ### 4.4 인덱스
 
-**`law-articles`** (법제처 법령·고시)
+**`food-law-articles`** (법제처 법령·고시)
 
 | 필드 | 타입 | 설명 |
 |---|---|---|
@@ -127,7 +132,8 @@ ADMRUL_MAP = {       # 행정규칙 ID → 메타데이터. ID는 target=admrul 
 | `law_id` | keyword | 법제처 ID |
 | `kind` | keyword | 법률 / 시행령 / 시행규칙 / 고시 |
 | `food_type` | keyword | 공통 / 일반식품 / 건강기능식품 |
-| `article_no`, `clause_no` | keyword | 표시용 조문 번호(예: `8`, `3의2`), 항 번호(없으면 `0`) |
+| `source_key` | keyword | `law_<ID>` / `admrul_<ID>` (재수집 때 삭제 감지 범위) |
+| `article_no`, `clause_no` | keyword | 표시용 조문 번호(예: `8`, `3의2`, `별표 1`), 항 번호(없으면 `0`) |
 | `title`, `content` | text | 조문 제목, 본문(`제n조(제목) n항\n...`) |
 | `content_hash` | keyword | 변경 감지 |
 | `effective_date` | date | 시행일 |
@@ -138,7 +144,7 @@ ADMRUL_MAP = {       # 행정규칙 ID → 메타데이터. ID는 target=admrul 
 
 `materials.jsonl`의 필드(`_id`=인정번호, `material`, `claims`, `daily_intake`, `caution`, `approved`, `text`, `source`, `sector`, `datasets`)를 그대로 넣고 `collected_at`(materials.jsonl 파일 수정일), `knn_vector`를 더한다. `text`가 BM25·임베딩 대상이다.
 
-`embed_index.py`는 인덱스마다 임베딩할 필드를 고른다: `law-articles`는 `content`, `food-materials`는 `text`. 실행 순서는 `collect_law` → `collect_admrul` → `index_materials` → `embed_index --index law-articles` → `embed_index --index food-materials`. 월 1회 갱신은 같은 순서를 다시 실행한다(바뀐 조문만 다시 인덱싱·임베딩).
+`embed_index.py`는 인덱스마다 임베딩할 필드를 고른다: `food-law-articles`는 `content`, `food-materials`는 `text`. 실행 순서는 `collect_law` → `collect_admrul` → `index_materials` → `embed_index --index food-law-articles` → `embed_index --index food-materials`. 월 1회 갱신은 같은 순서를 다시 실행한다(바뀐 조문만 다시 인덱싱·임베딩).
 
 ## 5. 질의 처리
 
@@ -161,7 +167,7 @@ ADMRUL_MAP = {       # 행정규칙 ID → 메타데이터. ID는 target=admrul 
 ### 5.2 처리 순서 (`runFoodRag`)
 
 1. **캐시 조회**: `lookupCache(..., docType="food", scope=f"{food_type}:{usage or '_'}")`. 적중하면 그대로 반환.
-2. **법령 검색**: `searchLaw(query, foodType, topK=5)` — 하이브리드(BM25 0.3 + kNN 0.7, 기존 `law-hybrid-pipeline`), 필터 `food_type ∈ {선택값, 공통}`.
+2. **법령 검색**: `searchLaw(query, foodType, topK=5)` — 하이브리드(BM25 0.3 + kNN 0.7, 검색 파이프라인 `food-hybrid-pipeline`), 필터 `food_type ∈ {선택값, 공통}`.
 3. **인정 문구 검색**: `food_type=health`일 때만 `searchMaterials(query, topK=3)`.
 4. **Context 조립**: 법령 결과에 `[1]`~`[5]`, 인정 문구에 이어지는 번호(`[6]`~`[8]`)를 붙인다.
    ```
@@ -242,8 +248,8 @@ ADMRUL_MAP = {       # 행정규칙 ID → 메타데이터. ID는 target=admrul 
 
 - `verdict`: `high` | `low` | `unsure` | `out_of_scope`.
 - `out_of_scope_reason`: `topic` | `no_basis` | `null`.
-- `article`: `제{article_no}조` + (`clause_no`가 `0`이 아니면 ` {clause_no}항`). 고시는 `제{article_no}조`.
-- `collected_at`: `basis` 문서의 `collected_at` 중 가장 최근 값. `basis`가 비면 Context 문서 기준, 그것도 없으면 `law-articles` 전체의 최근 값.
+- `article`: `제{article_no}조` + (`clause_no`가 `0`이 아니면 ` {clause_no}항`). 별표는 `article_no` 그대로(`별표 1`).
+- `collected_at`: `basis` 문서의 `collected_at` 중 가장 최근 값. `basis`가 비면 Context 문서 기준, 그것도 없으면 `food-law-articles` 전체의 최근 값.
 - `disclaimer`는 항상 붙는다.
 - 서버 오류(OpenSearch·Ollama 연결 실패 등)는 HTTP 500 `{"detail": "..."}`. 화면은 “잠시 후 다시 시도해 주세요”를 보여준다.
 
@@ -272,7 +278,7 @@ ADMRUL_MAP = {       # 행정규칙 ID → 메타데이터. ID는 target=admrul 
 
 ## 7. 캐시
 
-`qa_cache.py`는 그대로 쓰고 호출만 바꾼다: `docType="food"`, `scope="{food_type}:{usage or '_'}"`. `warm_cache.py`의 FAQ는 개요서 05장 대표 입력과 데모 예시 칩으로 바꾸고 각 항목에 `food_type`, `usage`를 넣는다. 응답 형식이 바뀌므로 에스테틱 때 만든 `qa-cache` 인덱스·Redis 키는 쓰지 않는다(새 환경에서 시작).
+`qa_cache.py`는 인덱스 이름을 `food-qa-cache`, Redis 키 접두어를 `foodqa:`로 바꾸고(같은 OpenSearch·Redis를 쓰는 에스테틱 챗봇과 겹치지 않게) 호출만 바꾼다: `docType="food"`, `scope="{food_type}:{usage or '_'}"`. `warm_cache.py`의 FAQ는 개요서 05장 대표 입력과 데모 예시 칩으로 바꾸고 각 항목에 `food_type`, `usage`를 넣는다. 응답 형식이 바뀌므로 에스테틱 때 만든 `qa-cache` 인덱스·Redis 키는 쓰지 않는다(새 환경에서 시작).
 
 ## 8. 평가 (`eval/`)
 
@@ -310,7 +316,7 @@ ADMRUL_MAP = {       # 행정규칙 ID → 메타데이터. ID는 target=admrul 
 | 판단 일치율 | `verdict == expected_verdict`인 비율 | 전체 |
 | 인정 문구 대조 정확도 | `verdict == expected_verdict`이고 `gold_recog_no`가 `basis`의 `recog_no`에 있는 비율 | `food_type=health`이고 `gold_recog_no`가 있는 문구 |
 
-결과(지표 표 + 문구별 결과)는 `eval/report.md`에 저장한다. 목표 수치는 첫 평가 후 팀이 정한다(근거 표기율 목표 100%).
+결과(지표 표 + 문구별 결과)는 `eval/report_answers.md`, 검색 방식 비교는 `eval/report_retrieval.md`에 저장한다. 목표 수치는 첫 평가 후 팀이 정한다(근거 표기율 목표 100%).
 
 ## 9. 테스트
 
@@ -329,7 +335,7 @@ ADMRUL_MAP = {       # 행정규칙 ID → 메타데이터. ID는 target=admrul 
 
 | 담당 | 1일차에 고정할 것 |
 |---|---|
-| A 수집 | `law_map.py`의 ID 10개, 식품위생법 `articles` 목록, `data/law/` 원본 |
+| A 수집 | `resolved_ids.json`의 ID 10개, 식품위생법 `articles` 목록, `data/law/` 원본 |
 | B 검색 | 4.4의 두 인덱스 매핑, `searchLaw()`/`searchMaterials()` 반환 형식 |
 | C 답변 | 5.3 프롬프트 초안, 5.4 함수 시그니처, 5.5 응답 형식 |
 | D 화면·평가 | `web/index.html`이 5.5 응답을 그리도록 목업 JSON으로 연결, `questions.jsonl` 초안 |
