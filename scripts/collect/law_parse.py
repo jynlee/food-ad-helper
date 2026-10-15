@@ -16,6 +16,7 @@ collect_law.py / collect_admrul.py 가 함께 사용한다. (네트워크·OpenS
 # ============================================================
 
 import hashlib
+import html
 import re
 
 
@@ -29,6 +30,10 @@ ANNEX_CHUNK  = 1200    # 별표 문서 하나의 최대 글자 수 (줄 단위�
 _ARTICLE_HEAD_RE = re.compile(r"^\s*제(\d+)조(?:의(\d+))?\s*(?:\(([^)]*)\))?")
 _CHAPTER_RE      = re.compile(r"^\s*제\d+(?:편|장|절|관)\s")
 _NAME_STRIP_RE   = re.compile(r"[\s·ㆍ∙]")
+# 별표 원문은 고정 폭으로 줄을 바꿔 단어가 중간에서 끊긴다. 항목 기호로 시작하는 줄만 새 줄로 본다.
+_ITEM_START_RE   = re.compile(r"^(?:■|※|□|○|◦|-\s|\d+\.|\d+\)|\(\d+\)|[가나다라마바사아자차카타파하][.)]|[①-⑳]|비고|\[별표|제\d+조)")
+_SPACE_AFTER_RE  = re.compile(r"[.,;:)\]>」』”\"'?!]$")
+_DELETED_RE      = re.compile(r"(?:제\d+조(?:의\d+)?(?:\([^)]*\))?\s*)?[①-⑳]?\s*삭제\s*(?:[<〈＜][^>〉＞]*[>〉＞])?")
 
 
 # ============================================================
@@ -49,6 +54,7 @@ def flattenText(v):
     if v is None:
         return []
     if isinstance(v, str):
+        v = html.unescape(v)     # 원문에 &lt;개정 ...&gt; 같은 HTML 기호가 섞여 있음
         return [line.rstrip() for line in v.split("\n") if line.strip()]
     if isinstance(v, list):
         out = []
@@ -76,6 +82,33 @@ def chunkText(lines, maxLen=ANNEX_CHUNK):
     if cur:
         chunks.append(cur)
     return chunks
+
+
+def cleanText(v):
+    """제목 등 한 줄 값: HTML 기호를 원래 글자로 바꾸고 앞뒤 공백 제거."""
+    return html.unescape(str(v or "")).strip()
+
+
+def isDeleted(text):
+    """'삭제 <2016.2.4.>', '제10조 삭제', '② 삭제' 처럼 내용 없이 삭제 표시만 있는지."""
+    return bool(_DELETED_RE.fullmatch(cleanText(text)))
+
+
+def joinWrappedLines(lines):
+    """
+    고정 폭으로 끊긴 줄을 다시 잇는다. 항목 기호로 시작하지 않는 줄은 앞 줄에 붙이고,
+    앞 줄이 문장부호로 끝나면 한 칸 띄운다 (예: "…각 목의 표" + "시 또는 광고" → "표시 또는 광고").
+    """
+    out = []
+    for line in (l.strip() for l in lines):
+        if not line:
+            continue
+        if not out or _ITEM_START_RE.match(line):
+            out.append(line)
+            continue
+        sep = " " if _SPACE_AFTER_RE.search(out[-1]) else ""
+        out[-1] = out[-1] + sep + line
+    return out
 
 
 def hashContent(content):
@@ -142,12 +175,12 @@ def parseClauses(lawData, meta):
         if articles is not None and displayNo not in articles:
             continue
         artKey  = str(art.get("조문키", "")).strip()
-        title   = str(art.get("조문제목", "")).strip()
+        title   = cleanText(art.get("조문제목"))
         clauses = asList(art.get("항"))
 
         if not clauses:
             body = "\n".join(flattenText(art.get("조문내용")))
-            if not body:
+            if not body or isDeleted(body):
                 continue
             content = f"제{displayNo}조({title})\n{body}"
             docs.append(makeDoc(meta, f"{meta['sourceKey']}_{artKey}_0", displayNo, "0", title, content))
@@ -159,7 +192,7 @@ def parseClauses(lawData, meta):
                 parts += flattenText(item.get("호내용"))
                 for mok in asList(item.get("목")):
                     parts += flattenText(mok.get("목내용"))
-            if not parts:
+            if not parts or isDeleted(" ".join(parts)):
                 continue
             content = f"제{displayNo}조({title}) {j}항\n" + "\n".join(parts)
             docs.append(makeDoc(meta, f"{meta['sourceKey']}_{artKey}_{j}", displayNo, str(j), title, content))
@@ -195,9 +228,9 @@ def parseAnnexes(annexUnits, meta):
         number = annexNo(unit)
         if wanted is not None and number not in wanted:
             continue
-        title = str(unit.get("별표제목", "")).strip()
-        lines = flattenText(unit.get("별표내용"))
-        if not lines:
+        title = cleanText(unit.get("별표제목"))
+        lines = joinWrappedLines(flattenText(unit.get("별표내용")))
+        if not lines or isDeleted(title) or all(isDeleted(line) for line in lines):
             continue
         for p, chunk in enumerate(chunkText(lines), start=1):
             content = f"[별표 {number}] {title}\n{chunk}"
@@ -236,6 +269,8 @@ def parseAdmrulArticles(lines, meta):
         if articles is not None and g["no"] not in articles:
             continue
         content = "\n".join(g["lines"])
+        if isDeleted(content):
+            continue
         docs.append(makeDoc(meta, f"{meta['sourceKey']}_{g['no']}", g["no"], "0", g["title"], content))
     return docs
 

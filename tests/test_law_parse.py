@@ -99,7 +99,7 @@ def test_parseAnnexes_reads_six_digit_number_with_branch():
 
 
 def test_parseAnnexes_splits_long_annex_into_parts():
-    units = [{"별표번호": "0003", "별표제목": "긴 별표", "별표내용": ["가" * 700, "나" * 700]}]
+    units = [{"별표번호": "0003", "별표제목": "긴 별표", "별표내용": ["1. " + "가" * 700, "2. " + "나" * 700]}]
     docs = parseAnnexes(units, makeMeta())
     assert [d["_id"] for d in docs] == ["law_100_annex3_p1", "law_100_annex3_p2"]
 
@@ -173,3 +173,47 @@ def test_planChanges_rerun_with_same_docs_changes_nothing():
     plan = planChanges(docs, existing)
     assert plan["toIndex"] == [] and plan["removedIds"] == [] and plan["history"] == []
     assert plan["unchangedIds"] == ["a", "b"]
+
+
+# ---------- 실제 원본에서 확인한 품질 문제 (2026-10-15 수집분) ----------
+
+REAL_ANNEX_LINES = [  # 식품 등의 표시·광고에 관한 법률 시행령 [별표 1] 원문 일부 (고정 폭 줄바꿈)
+    "■ 식품 등의 표시ㆍ광고에 관한 법률 시행령 [별표 1] &lt;개정 2023. 12. 26.&gt;            ",
+    "                                                                                      ",
+    "  1. 질병의 예방ㆍ치료에 효능이 있는 것으로 인식할 우려가 있는 다음 각 목의 표        ",
+    "  시 또는 광고                                                                        ",
+    "    가. 질병 또는 질병군(疾病群)의 발생을 예방한다는 내용의 표시ㆍ광고. 다만,         ",
+    "  다음의 어느 하나에 해당하는 경우는 제외한다.                                        ",
+    "      1) 특수의료용도식품(정상적으로 섭취, 소화, 흡수 또는 대사할 수 있는 능          ",
+    "  력이 제한되거나",
+]
+
+
+def test_parseAnnexes_rejoins_fixed_width_wrapped_lines():
+    units = [{"별표번호": "0001", "별표구분": "별표", "별표제목": "부당한 표시 또는 광고의 내용(제3조제1항 관련)",
+              "별표내용": [REAL_ANNEX_LINES]}]
+    content = parseAnnexes(units, makeMeta())[0]["_source"]["content"]
+    assert "다음 각 목의 표시 또는 광고" in content
+    assert "표시ㆍ광고. 다만, 다음의 어느 하나에" in content
+    assert "대사할 수 있는 능력이 제한되거나" in content
+    assert "\n가. 질병 또는 질병군" in content and "\n1) 특수의료용도식품" in content
+
+
+def test_html_entities_are_unescaped():
+    units = [{"별표번호": "0001", "별표구분": "별표", "별표제목": "제목 &lt;개정&gt;", "별표내용": [REAL_ANNEX_LINES[:1]]}]
+    src = parseAnnexes(units, makeMeta())[0]["_source"]
+    assert "&lt;" not in src["content"] and "<개정 2023. 12. 26.>" in src["content"]
+    assert src["title"] == "제목 <개정>"
+
+
+def test_deleted_articles_clauses_and_annexes_are_skipped():
+    law = {"법령": {"조문": {"조문단위": [
+        {"조문키": "0010001", "조문번호": "10", "조문여부": "조문", "조문제목": "",
+         "조문내용": "제10조 삭제 &lt;2020. 1. 1.&gt;"},
+        {"조문키": "0011001", "조문번호": "11", "조문여부": "조문", "조문제목": "남은 조문",
+         "항": [{"항내용": "① 살아 있는 항"}, {"항내용": "② 삭제 <2019. 3. 2.>"}]},
+    ]}}}
+    docs = parseClauses(law, makeMeta())
+    assert [d["_id"] for d in docs] == ["law_100_0011001_1"]
+    units = [{"별표번호": "0002", "별표구분": "별표", "별표제목": "삭제 &lt;2016.2.4.&gt;", "별표내용": "삭제"}]
+    assert parseAnnexes(units, makeMeta()) == []
