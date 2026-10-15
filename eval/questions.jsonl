@@ -1,0 +1,38 @@
+{"id": "g01", "query": "SNS에 “면역력 강화에 좋아요”라고 올려도 되나요?", "food_type": "general", "usage": "sns", "category": "in_scope", "expected_verdict": "high", "gold_basis": [], "gold_recog_no": []}
+{"id": "g02", "query": "상세페이지에 “다이어트 효과”라고 써도 되나요?", "food_type": "general", "usage": "page", "category": "in_scope", "expected_verdict": "high", "gold_basis": [], "gold_recog_no": []}
+{"id": "g03", "query": "메뉴판에 “혈당 관리 샐러드”라고 써도 되나요?", "food_type": "general", "usage": "menu", "category": "in_scope", "expected_verdict": "high", "gold_basis": [], "gold_recog_no": []}
+{"id": "g04", "query": "상세페이지에 “먹으면 혈당이 내려갑니다”라고 써도 되나요?", "food_type": "general", "usage": "page", "category": "in_scope", "expected_verdict": "high", "gold_basis": [], "gold_recog_no": []}
+{"id": "g05", "query": "우리 카페 홍삼차, 혈당 관리에 최고!", "food_type": "general", "usage": "sns", "category": "in_scope", "expected_verdict": "high", "gold_basis": [], "gold_recog_no": []}
+{"id": "g06", "query": "상세페이지에 “천연 무첨가”라고 써도 되나요?", "food_type": "general", "usage": "page", "category": "in_scope", "expected_verdict": "unsure", "gold_basis": [], "gold_recog_no": []}
+{"id": "g07", "query": "메뉴판에 “국내산 쌀 100% 사용”이라고 써도 되나요? 실제로 국내산 쌀만 씁니다.", "food_type": "general", "usage": "menu", "category": "in_scope", "expected_verdict": "low", "gold_basis": [], "gold_recog_no": []}
+{"id": "g08", "query": "SNS에 “암 예방에 좋은 버섯 반찬”이라고 올려도 되나요?", "food_type": "general", "usage": "sns", "category": "in_scope", "expected_verdict": "high", "gold_basis": [], "gold_recog_no": []}
+{"id": "h01", "query": "홍삼 건강기능식품 상세페이지에 “혈당 조절에 도움을 줄 수 있음”이라고 써도 되나요?", "food_type": "health", "usage": "page", "category": "in_scope", "expected_verdict": "low", "gold_basis": [], "gold_recog_no": ["2024-20"]}
+{"id": "h02", "query": "홍삼 건강기능식품을 SNS에 “당뇨를 치료합니다”라고 홍보해도 되나요?", "food_type": "health", "usage": "sns", "category": "in_scope", "expected_verdict": "high", "gold_basis": [], "gold_recog_no": ["2024-20"]}
+{"id": "h03", "query": "공액리놀레산 제품 상세페이지에 “과체중인 성인의 체지방 감소에 도움을 줄 수 있음”이라고 써도 되나요?", "food_type": "health", "usage": "page", "category": "in_scope", "expected_verdict": "low", "gold_basis": [], "gold_recog_no": ["2006-21", "2006-22", "2005-16"]}
+{"id": "h04", "query": "공액리놀레산 제품을 SNS에 “한 달에 10kg 감량 보장”이라고 홍보해도 되나요?", "food_type": "health", "usage": "sns", "category": "in_scope", "expected_verdict": "high", "gold_basis": [], "gold_recog_no": ["2006-21", "2006-22", "2005-16"]}
+{"id": "h05", "query": "상세페이지에 “고혈압을 치료합니다”라고 써도 되나요?", "food_type": "health", "usage": "page", "category": "in_scope", "expected_verdict": "high", "gold_basis": [], "gold_recog_no": []}
+{"id": "v-g01", "query": "인스타에 면역력 키워주는 음식이라고 올리면 문제 될까요?", "food_type": "general", "usage": "sns", "category": "variant", "expected_verdict": "high", "gold_basis": [], "gold_recog_no": []}
+{"id": "v-g02", "query": "쇼핑몰 설명에 살 빠지는 효과 있다고 적어도 돼요?", "food_type": "general", "usage": "page", "category": "variant", "expected_verdict": "high", "gold_basis": [], "gold_recog_no": []}
+{"id": "v-g03", "query": "메뉴 이름을 혈당 잡는 샐러드로 해도 괜찮나요?", "food_type": "general", "usage": "menu", "category": "variant", "expected_verdict": "high", "gold_basis": [], "gold_recog_no": []}
+{"id": "v-g04", "query": "이거 먹으면 혈당 수치 떨어진다고 상세페이지에 써도 되나요", "food_type": "general", "usage": "page", "category": "variant", "expected_verdict": "high", "gold_basis": [], "gold_recog_no": []}
+{"id": "v-g05", "query": "홍삼라떼 혈당 관리 최고라고 SNS에 올릴까 하는데요", "food_type": "general", "usage": "sns", "category": "variant", "expected_verdict": "high", "gold_basis": [], "gold_recog_no": []}
+{"id": "v-g06", "query": "무첨가 천연 재료라고 상품 설명에 넣어도 될까요?", "food_type": "general", "usage": "page", "category": "variant", "expected_verdict": "unsure", "gold_basis": [], "gold_recog_no": []}
+{"id": "v-g07", "query": "실제로 국내산 쌀만 쓰는데 메뉴판에 국내산 쌀 100%라고 적어도 되죠?", "food_type": "general", "usage": "menu", "category": "variant", "expected_verdict": "low", "gold_basis": [], "gold_recog_no": []}
+{"id": "v-g08", "query": "버섯 반찬이 암을 막아준다고 블로그에 써도 돼요?", "food_type": "general", "usage": "sns", "category": "variant", "expected_verdict": "high", "gold_basis": [], "gold_recog_no": []}
+{"id": "v-h01", "query": "홍삼 제품에 혈당 조절에 도움 줄 수 있다고 적는 건 괜찮나요?", "food_type": "health", "usage": "page", "category": "variant", "expected_verdict": "low", "gold_basis": [], "gold_recog_no": ["2024-20"]}
+{"id": "v-h02", "query": "홍삼 건기식 홍보에 당뇨 치료된다고 써도 될까요?", "food_type": "health", "usage": "sns", "category": "variant", "expected_verdict": "high", "gold_basis": [], "gold_recog_no": ["2024-20"]}
+{"id": "v-h03", "query": "CLA 제품 설명에 과체중 성인 체지방 감소에 도움 줄 수 있다고 넣어도 되나요?", "food_type": "health", "usage": "page", "category": "variant", "expected_verdict": "low", "gold_basis": [], "gold_recog_no": ["2006-21", "2006-22", "2005-16"]}
+{"id": "v-h04", "query": "CLA 먹으면 한 달 10kg 빠진다고 인스타에 써도 돼요?", "food_type": "health", "usage": "sns", "category": "variant", "expected_verdict": "high", "gold_basis": [], "gold_recog_no": ["2006-21", "2006-22", "2005-16"]}
+{"id": "v-h05", "query": "고혈압 치료 효과가 있다고 상품 페이지에 적어도 되나요?", "food_type": "health", "usage": "page", "category": "variant", "expected_verdict": "high", "gold_basis": [], "gold_recog_no": []}
+{"id": "o01", "query": "식품 표시사항에 꼭 넣어야 하는 항목이 뭔가요?", "food_type": "general", "usage": "page", "category": "out_of_scope", "expected_verdict": "out_of_scope", "gold_basis": [], "gold_recog_no": []}
+{"id": "o02", "query": "건강기능식품 표시사항에 들어가야 하는 내용은?", "food_type": "health", "usage": "page", "category": "out_of_scope", "expected_verdict": "out_of_scope", "gold_basis": [], "gold_recog_no": []}
+{"id": "o03", "query": "식품 제조업 영업신고는 어떻게 하나요?", "food_type": "general", "usage": null, "category": "out_of_scope", "expected_verdict": "out_of_scope", "gold_basis": [], "gold_recog_no": []}
+{"id": "o04", "query": "주방 위생 점검 기준이 궁금해요.", "food_type": "general", "usage": null, "category": "out_of_scope", "expected_verdict": "out_of_scope", "gold_basis": [], "gold_recog_no": []}
+{"id": "o05", "query": "반찬가게 부가세 신고는 어떻게 하나요?", "food_type": "general", "usage": null, "category": "out_of_scope", "expected_verdict": "out_of_scope", "gold_basis": [], "gold_recog_no": []}
+{"id": "o06", "query": "화장품 광고에 “주름 개선”이라고 써도 되나요?", "food_type": "health", "usage": "sns", "category": "out_of_scope", "expected_verdict": "out_of_scope", "gold_basis": [], "gold_recog_no": []}
+{"id": "o07", "query": "광고 문구 때문에 걸리면 영업정지 몇 개월 받나요?", "food_type": "general", "usage": null, "category": "out_of_scope", "expected_verdict": "out_of_scope", "gold_basis": [], "gold_recog_no": []}
+{"id": "n01", "query": "인스타 광고에 협찬 표시는 어떻게 해야 하나요?", "food_type": "general", "usage": "sns", "category": "no_basis", "expected_verdict": "out_of_scope", "gold_basis": [], "gold_recog_no": []}
+{"id": "n02", "query": "상세페이지에 다른 회사 제품 사진을 써도 저작권 문제 없나요?", "food_type": "general", "usage": "page", "category": "no_basis", "expected_verdict": "out_of_scope", "gold_basis": [], "gold_recog_no": []}
+{"id": "n03", "query": "배달앱 리뷰 이벤트로 별점 5점을 요구해도 되나요?", "food_type": "general", "usage": "sns", "category": "no_basis", "expected_verdict": "out_of_scope", "gold_basis": [], "gold_recog_no": []}
+{"id": "n04", "query": "상세페이지 글씨체는 어떤 걸 써야 하나요?", "food_type": "general", "usage": "page", "category": "no_basis", "expected_verdict": "out_of_scope", "gold_basis": [], "gold_recog_no": []}
+{"id": "n05", "query": "건강기능식품 쇼핑몰 할인 쿠폰 금액에 제한이 있나요?", "food_type": "health", "usage": "page", "category": "no_basis", "expected_verdict": "out_of_scope", "gold_basis": [], "gold_recog_no": []}
