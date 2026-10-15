@@ -74,7 +74,7 @@ def runFoodRag(osClient, cfg, query, foodType, usage=None, queryVector=None):
     if queryVector is None:
         queryVector = embedQuery(cfg, query)
 
-    lawHits      = searchLaw(osClient, cfg, query, foodType, topK=LAW_TOP_K, queryVector=queryVector)
+    lawHits      = searchLaw(osClient, cfg, query, foodType, topK=LAW_TOP_K)   # 법령은 광고 맥락을 붙여 따로 임베딩
     materialHits = []
     if foodType == "health":
         materialHits = searchMaterials(osClient, cfg, query, topK=MATERIAL_TOP_K, queryVector=queryVector)

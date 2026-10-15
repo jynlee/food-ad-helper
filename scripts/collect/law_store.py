@@ -37,8 +37,8 @@ MAPPING = {
             "food_type":      {"type": "keyword"},
             "article_no":     {"type": "keyword"},
             "clause_no":      {"type": "keyword"},
-            "title":          {"type": "text", "analyzer": "standard"},
-            "content":        {"type": "text", "analyzer": "standard"},
+            "title":          {"type": "text", "analyzer": "cjk"},       # 한글을 두 글자씩 색인 ("혈당이" ↔ "혈당")
+            "content":        {"type": "text", "analyzer": "cjk"},
             "content_hash":   {"type": "keyword"},
             "effective_date": {"type": "date", "format": "yyyyMMdd||yyyy-MM-dd"},
             "collected_at":   {"type": "date", "format": "yyyy-MM-dd"},

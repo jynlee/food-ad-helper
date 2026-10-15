@@ -35,7 +35,8 @@ def calls(monkeypatch):
 
 def test_general_skips_material_search(calls):
     resp = rag_pipeline.runFoodRag(None, {}, "혈당 관리 샐러드", "general", usage="menu", queryVector=[0.2])
-    assert calls["materials"] == 0 and calls["law"] == [("general", [0.2])]
+    # 법령 검색은 광고 맥락을 붙인 문장으로 searchLaw가 직접 임베딩하므로 원문 벡터를 넘기지 않는다
+    assert calls["materials"] == 0 and calls["law"] == [("general", None)]
     assert "식품 종류: 일반식품" in calls["llm"][0] and "메뉴판" in calls["llm"][0]
     assert resp["verdict"] == "high" and [b["type"] for b in resp["basis"]] == ["law"]
 

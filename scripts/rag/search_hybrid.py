@@ -39,6 +39,9 @@ WEIGHT_KNN      = 0.7
 LAW_SOURCE      = ["law_name", "kind", "food_type", "article_no", "clause_no", "title",
                    "content", "effective_date", "collected_at"]
 MATERIAL_SOURCE = ["material", "claims", "daily_intake", "caution", "collected_at"]
+# 광고 문구만으로 검색하면 의미 검색이 나트륨·영양성분 "표시사항" 조문으로 쏠린다.
+# 법령 검색에만 이 맥락을 붙여 부당한 표시·광고 조문(법 제8조, 시행령 별표 1, 고시 제2조)이 먼저 나오게 한다.
+LAW_QUERY_SUFFIX = " 라는 광고 문구가 부당한 표시 또는 광고에 해당하는지"
 
 
 # ============================================================
@@ -138,11 +141,17 @@ def toMaterialHit(hit, rank):
 # 검색 실행
 # ============================================================
 
+def lawSearchText(queryText):
+    """법령 검색에 실제로 쓰는 문장: 사용자 문구 + 광고 점검 맥락."""
+    return queryText.rstrip() + LAW_QUERY_SUFFIX
+
+
 def searchLaw(osClient, cfg, queryText, foodType, topK=5, mode="hybrid", queryVector=None):
     """법령·고시 검색. bm25 모드는 임베딩을 만들지 않는다."""
+    searchText = lawSearchText(queryText)          # queryVector를 넘길 때는 이 문장의 벡터여야 한다
     if mode != "bm25" and queryVector is None:
-        queryVector = embedQuery(cfg, queryText)
-    body   = buildLawQuery(queryText, queryVector, foodType, topK, mode)
+        queryVector = embedQuery(cfg, searchText)
+    body   = buildLawQuery(searchText, queryVector, foodType, topK, mode)
     params = {"search_pipeline": PIPELINE_ID} if mode == "hybrid" else {}
     resp   = osClient.search(index=LAW_INDEX, body=body, params=params)
     return [toLawHit(h, i + 1) for i, h in enumerate(resp["hits"]["hits"])]

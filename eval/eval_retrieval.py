@@ -21,7 +21,7 @@ sys.path.insert(0, os.path.join(HERE, "..", "scripts", "rag"))
 sys.path.insert(0, os.path.join(HERE, "..", "scripts", "common"))
 from food_common import getOsClient, loadConfig
 from metrics import hitAtK
-from search_hybrid import MODES, embedQuery, ensurePipeline, searchLaw
+from search_hybrid import MODES, embedQuery, ensurePipeline, lawSearchText, searchLaw
 
 TOP_K = 5
 
@@ -41,7 +41,7 @@ def main():
     counts  = {mode: 0 for mode in MODES}
     rows    = []
     for q in graded:
-        vec  = embedQuery(cfg, q["query"])
+        vec  = embedQuery(cfg, lawSearchText(q["query"]))
         mark = {}
         for mode in MODES:
             hits = searchLaw(osClient, cfg, q["query"], q["food_type"], topK=TOP_K, mode=mode, queryVector=vec)

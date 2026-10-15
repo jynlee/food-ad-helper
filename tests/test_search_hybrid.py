@@ -84,3 +84,32 @@ def test_searchMaterials_targets_material_index():
     fake = FakeOs()
     hits = searchMaterials(fake, {}, "혈당", queryVector=VEC)
     assert fake.calls[0]["index"] == "food-materials" and hits[0]["recog_no"] == "x"
+
+
+# ---------- 2026-10-15 검색 확인에서 찾은 문제 ----------
+
+def test_law_search_text_adds_ad_context():
+    from search_hybrid import lawSearchText
+    text = lawSearchText("먹으면 혈당이 내려갑니다")
+    assert text.startswith("먹으면 혈당이 내려갑니다")
+    assert "부당한 표시 또는 광고" in text
+
+
+def test_searchLaw_searches_and_embeds_the_ad_context_text(monkeypatch):
+    import search_hybrid
+    embedded = []
+    monkeypatch.setattr(search_hybrid, "embedQuery", lambda cfg, q: embedded.append(q) or [0.3])
+    fake = FakeOs()
+    searchLaw(fake, {}, "먹으면 혈당이 내려갑니다", "general")
+    bm25 = fake.calls[0]["body"]["query"]["hybrid"]["queries"][0]
+    assert "부당한 표시 또는 광고" in bm25["bool"]["must"][0]["match"]["content"]["query"]
+    assert len(embedded) == 1 and "부당한 표시 또는 광고" in embedded[0]
+
+
+def test_text_fields_use_cjk_analyzer_for_korean():
+    # standard 분석기는 "혈당이"와 "혈당"을 다른 단어로 봐서 BM25가 0건이었다
+    from index_materials import MAPPING as MATERIAL_MAPPING
+    from law_store import MAPPING as LAW_MAPPING
+    law = LAW_MAPPING["mappings"]["properties"]
+    assert law["content"]["analyzer"] == "cjk" and law["title"]["analyzer"] == "cjk"
+    assert MATERIAL_MAPPING["mappings"]["properties"]["text"]["analyzer"] == "cjk"

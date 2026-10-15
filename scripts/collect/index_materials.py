@@ -41,7 +41,7 @@ MAPPING = {
             "daily_intake": {"type": "text"},
             "caution":      {"type": "text"},
             "approved":     {"type": "keyword"},
-            "text":         {"type": "text", "analyzer": "standard"},
+            "text":         {"type": "text", "analyzer": "cjk"},   # 한글을 두 글자씩 색인
             "source":       {"type": "keyword"},
             "sector":       {"type": "keyword"},
             "datasets":     {"type": "keyword"},
