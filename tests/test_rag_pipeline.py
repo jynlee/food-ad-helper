@@ -55,3 +55,26 @@ def test_no_hits_skips_llm_and_returns_no_basis(monkeypatch, calls):
     assert calls["llm"] == []
     assert resp["verdict"] == "out_of_scope" and resp["out_of_scope_reason"] == "no_basis"
     assert resp["collected_at"] == "2026-10-16"
+
+
+def test_generateAnswer_turns_off_thinking_and_keeps_model_loaded(monkeypatch):
+    # gemma4:e4b가 숨은 "생각"으로 1,300토큰 가까이 만들어 답변이 45초 넘게 걸렸다 (끄면 8~14초, 2026-10-15 측정)
+    sent = {}
+
+    class FakeResp:
+        def raise_for_status(self):
+            pass
+
+        def json(self):
+            return {"response": "[판단] 큼"}
+
+    def fakePost(url, json=None, timeout=None):
+        sent.update(json)
+        return FakeResp()
+
+    monkeypatch.setattr(rag_pipeline.requests, "post", fakePost)
+    out = rag_pipeline.generateAnswer({"ollamaHost": "http://x", "llmModel": "gemma4:e4b"}, "프롬프트")
+    assert out == "[판단] 큼"
+    assert sent["think"] is False
+    assert sent["keep_alive"] == "30m"
+    assert sent["options"]["temperature"] == 0.1

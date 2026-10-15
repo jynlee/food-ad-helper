@@ -45,6 +45,8 @@ def generateAnswer(cfg, prompt):
         "model":   cfg['llmModel'],
         "prompt":  prompt,
         "stream":  False,
+        "think":   False,     # gemma4의 숨은 생각 끄기: 45초 → 8~14초 (답변 형식·판단은 그대로)
+        "keep_alive": "30m",  # 5분 쉬면 모델을 내리므로, 시연 중 첫 질문도 빠르게 30분 유지
         "options": {"temperature": 0.1, "num_ctx": 8192},
     }
     resp = requests.post(url, json=payload, timeout=300)
