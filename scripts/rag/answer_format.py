@@ -161,7 +161,8 @@ NO_BASIS_PARSED = {
 
 _TAG_RE        = re.compile(r"\[\s*(판단\s*이유|판단|해야\s*할\s*일|근거|범위\s*밖\s*사유|식품\s*종류)\s*\]")
 _LIST_MARK_RE  = re.compile(r"^\s*(?:\d+\s*[.)]|[-•·*])\s*")
-_REF_LINE_RE   = re.compile(r"^\s*\[?(\d+)\]?\s*(?:[|:：\-–]\s*(.*))?$")
+_REF_LINE_RE   = re.compile(r"^\s*\[?(\d+)\]?\s*[|:：\-–.)]?\s*(.*)$")
+_REF_LAW_HEAD_RE = re.compile(r"^.*?(?:제\d+조(?:의\d+)?(?:\s*\d+항)?|별표\s*\d+(?:의\d+)?)\s*[:：|]\s*")
 _REF_LIST_RE   = re.compile(r"^[\d\s,\[\]]+$")
 
 
@@ -210,7 +211,8 @@ def parseBasisRefs(value):
             continue
         m = _REF_LINE_RE.match(line)
         if m:
-            refs.append((int(m.group(1)), (m.group(2) or "").strip()))
+            summary = _REF_LAW_HEAD_RE.sub("", (m.group(2) or "").strip(), count=1)   # "[1] 법령명 제8조 1항: 요약" → 요약
+            refs.append((int(m.group(1)), summary.strip()))
     return refs
 
 

@@ -100,3 +100,12 @@ def test_buildResponse_no_hits_uses_no_basis_and_fallback_date():
     resp = buildResponse(NO_BASIS_PARSED, {}, "", "2026-10-16")
     assert resp["verdict"] == "out_of_scope" and resp["out_of_scope_reason"] == "no_basis"
     assert resp["actions"] == OUT_OF_SCOPE_ACTIONS["no_basis"] and resp["collected_at"] == "2026-10-16"
+
+
+def test_parse_gemma_style_bracket_refs_with_law_prefix():
+    # gemma4:e4b 실제 출력 형식 (2026-10-15 확인): "[n] 법령명 제n조 n항: 요약" / "[n] 요약"
+    raw = ("[판단] 큼\n[판단이유] 이유\n[근거]\n"
+           "[1] 식품 등의 표시·광고에 관한 법률 제8조 1항: 일반식품이 질병 예방 효능을 광고할 수 없습니다.\n"
+           "[2] 홍삼의 인정 문구는 혈당 조절까지입니다.\n[식품종류] 일치")
+    assert parseAnswer(raw)["basis_refs"] == [(1, "일반식품이 질병 예방 효능을 광고할 수 없습니다."),
+                                               (2, "홍삼의 인정 문구는 혈당 조절까지입니다.")]
