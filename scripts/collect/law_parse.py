@@ -32,7 +32,14 @@ _CHAPTER_RE      = re.compile(r"^\s*제\d+(?:편|장|절|관)\s")
 _NAME_STRIP_RE   = re.compile(r"[\s·ㆍ∙]")
 # 별표 원문은 고정 폭으로 줄을 바꿔 단어가 중간에서 끊긴다. 항목 기호로 시작하는 줄만 새 줄로 본다.
 _ITEM_START_RE   = re.compile(r"^(?:■|※|□|○|◦|-\s|\d+\.|\d+\)|\(\d+\)|[가나다라마바사아자차카타파하][.)]|[①-⑳]|비고|\[별표|제\d+조)")
+_BOX_BORDER_RE   = re.compile(r"[┌┐└┘├┤┬┴┼─━┏┓┗┛┣┫┳┻╋┯┷┠┨┿]+")
 _SPACE_AFTER_RE  = re.compile(r"[.,;:)\]>」』”\"'?!]$")
+# 고시 조문은 "…광고가. 한약의…", "…광고2. 건강…"처럼 항목이 줄바꿈 없이 붙어 온다.
+# "다."는 문장 끝("한다. ")과 헷갈리므로 동사 어미 뒤에서는 나누지 않는다.
+_GLUED_ITEM_RE   = re.compile(r"(?<=[^\s\d])(?=\d{1,2}\.\s)"
+                              r"|(?<=[^\s\d])(?=[가나라마바사아자차카타파하]\.\s)"
+                              r"|(?<=[^\s\d한있같된없않였니])(?=다\.\s)"
+                              r"|(?<=\S)(?=\(예시\))")
 _DELETED_RE      = re.compile(r"(?:제\d+조(?:의\d+)?(?:\([^)]*\))?\s*)?[①-⑳]?\s*삭제\s*(?:[<〈＜][^>〉＞]*[>〉＞])?")
 
 
@@ -73,7 +80,10 @@ def chunkText(lines, maxLen=ANNEX_CHUNK):
     """줄을 자르지 않고 maxLen 안팎으로 묶는다. 한 줄이 maxLen보다 길면 그 줄만 한 덩어리."""
     chunks = []
     cur    = ""
-    for line in lines:
+    pieces = []
+    for line in lines:                       # 안전장치: maxLen보다 긴 한 줄은 글자 수로 강제로 자른다
+        pieces += [line[i:i + maxLen] for i in range(0, len(line), maxLen)] or [line]
+    for line in pieces:
         if cur and len(cur) + 1 + len(line) > maxLen:
             chunks.append(cur)
             cur = line
@@ -101,6 +111,10 @@ def joinWrappedLines(lines):
     """
     out = []
     for line in (l.strip() for l in lines):
+        if line[:1] in ("│", "┃"):                     # 상자 문자 표의 행 → "칸 | 칸 | 칸" 한 줄
+            out.append(" | ".join(cell.strip() for cell in line.strip("│┃").split("│")))
+            continue
+        line = _BOX_BORDER_RE.sub("", line).strip()     # 테두리 줄은 지우고, 줄 끝에 붙은 테두리도 뗀다
         if not line:
             continue
         if not out or _ITEM_START_RE.match(line):
@@ -268,10 +282,19 @@ def parseAdmrulArticles(lines, meta):
         seen.add(g["no"])
         if articles is not None and g["no"] not in articles:
             continue
-        content = "\n".join(g["lines"])
+        content = _GLUED_ITEM_RE.sub("\n", "\n".join(g["lines"]))
         if isDeleted(content):
             continue
-        docs.append(makeDoc(meta, f"{meta['sourceKey']}_{g['no']}", g["no"], "0", g["title"], content))
+        baseId = f"{meta['sourceKey']}_{g['no']}"
+        if len(content) <= ANNEX_CHUNK:
+            docs.append(makeDoc(meta, baseId, g["no"], "0", g["title"], content))
+            continue
+        # 긴 조문(예: 부당한 표시·광고 고시 제2조 5천여 자)은 줄 단위로 나누고, 조각마다 조문 머리를 붙인다
+        main, _, branch = g["no"].partition("의")
+        head = f"제{main}조" + (f"의{branch}" if branch else "") + f"({g['title']})"
+        for p, chunk in enumerate(chunkText([l for l in content.split("\n") if l.strip()]), start=1):
+            text = chunk if p == 1 else f"{head}\n{chunk}"
+            docs.append(makeDoc(meta, f"{baseId}_p{p}", g["no"], "0", g["title"], text))
     return docs
 
 

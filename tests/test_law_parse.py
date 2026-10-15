@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pytest
 
-from law_parse import (INDEX_NAME, chunkText, flattenText, hashContent, parseAdmrulArticles,
+from law_parse import (INDEX_NAME, chunkText, flattenText, hashContent, joinWrappedLines, parseAdmrulArticles,
                        parseAnnexes, parseClauses, parseDate, pickTarget, planChanges)
 
 FIX = Path(__file__).parent / "fixtures"
@@ -217,3 +217,71 @@ def test_deleted_articles_clauses_and_annexes_are_skipped():
     assert [d["_id"] for d in docs] == ["law_100_0011001_1"]
     units = [{"별표번호": "0002", "별표구분": "별표", "별표제목": "삭제 &lt;2016.2.4.&gt;", "별표내용": "삭제"}]
     assert parseAnnexes(units, makeMeta()) == []
+
+
+REAL_ADMRUL_ART2 = (  # 「식품등의 부당한 표시 또는 광고의 내용 기준」 제2조 원문 일부 (항목이 줄바꿈 없이 붙어 옴)
+    '제2조(부당한 표시 또는 광고의 내용) 식품등의 부당한 표시 또는 광고 내용은 다음 각 호와 같다.'
+    '1. 식품등을 의약품으로 인식할 우려가 있는 표시 또는 광고가. 한약의 처방명 또는 별표 1의 이와 유사한 명칭을 사용한 표시ㆍ광고'
+    '2. 건강기능식품이 아닌 것을 건강기능식품으로 인식할 우려가 있는 표시 또는 광고가. "건강기능식품" 문구나 도안을 사용한 표시ㆍ광고'
+    '3. 소비자를 기만하는 표시 또는 광고가. 사용하지 못하도록 정한 원재료 등이 없다는 표시ㆍ광고.'
+    '(예시) 고춧가루에 "고추씨 무첨가" 표시ㆍ광고나. 「식품의 기준 및 규격」제1.2.9)에 따른 보존료가 없다는 표시ㆍ광고'
+)
+
+
+def test_parseAdmrulArticles_splits_glued_items_onto_lines():
+    content = parseAdmrulArticles([REAL_ADMRUL_ART2], makeMeta(sourceKey="admrul_200"))[0]["_source"]["content"]
+    assert "\n1. 식품등을 의약품으로" in content
+    assert "표시 또는 광고\n가. 한약의 처방명" in content
+    assert "\n(예시) 고춧가루에" in content
+    assert "\n나. 「식품의 기준 및 규격」제1.2.9)에 따른" in content     # 1.2.9) 는 항목 번호가 아님
+
+
+def test_parseAdmrulArticles_chunks_long_article_keeping_article_no():
+    long_text = "제2조(내용) 머리말." + "".join(f"{n}. " + "가" * 500 for n in range(1, 6))
+    docs = parseAdmrulArticles([long_text], makeMeta(sourceKey="admrul_200"))
+    assert [d["_id"] for d in docs] == ["admrul_200_2_p1", "admrul_200_2_p2", "admrul_200_2_p3"]
+    assert all(d["_source"]["article_no"] == "2" for d in docs)
+    assert all(len(d["_source"]["content"]) <= 1300 for d in docs)
+    assert docs[1]["_source"]["content"].startswith("제2조(내용)")    # 조각마다 조문 머리 유지
+
+
+REAL_TABLE_LINES = [  # 「식품등의 부당한 표시 또는 광고의 내용 기준」 [별표 2] 원문 일부 (상자 문자 표)
+    "[별표 2] 최소한의 물리적 공정 용어 정의와 범위",
+    "┌───┬─────────────────────┬────────────────┐",
+    "│공정명│용어 정의                                 │제 외                           │",
+    "├───┼─────────────────────┼────────────────┤",
+    "│세척  │물(세척액 포함)을 이용하여 불순물 제거    │-                               │",
+    "├───┼─────────────────────┼────────────────┤",
+    "│박피  │칼과 기계적 마찰을 이용하여 과일이나      │열수, 스팀, 화염, 알칼리 용     │",
+    "│      │채소의 껍질을 벗김                        │액 등을 이용한 박피 제외        │",
+    "  가. 아래에 해당하는 한약 처방명과 유사명칭┌────────┬──────┐",
+]
+
+
+def test_box_drawing_tables_become_one_row_per_line():
+    lines = joinWrappedLines(REAL_TABLE_LINES)
+    assert lines == [
+        "[별표 2] 최소한의 물리적 공정 용어 정의와 범위",
+        "공정명 | 용어 정의 | 제 외",
+        "세척 | 물(세척액 포함)을 이용하여 불순물 제거 | -",
+        "박피 | 칼과 기계적 마찰을 이용하여 과일이나 | 열수, 스팀, 화염, 알칼리 용",
+        " | 채소의 껍질을 벗김 | 액 등을 이용한 박피 제외",
+        "가. 아래에 해당하는 한약 처방명과 유사명칭",
+    ]
+
+
+def test_heavy_box_tables_are_handled_too():
+    # 건강기능식품에 관한 법률 시행규칙 [별표 9] 행정처분 기준 표 (굵은 선 상자 문자)
+    lines = joinWrappedLines([
+        "Ⅱ. 개별기준┏┯┯┓",
+        "┃위반사항                              │근거법령  │행정처분기준      ┃",
+        "┠┨",
+        "┃1. 영업허가를 받지 않은 경우          │법 제5조  │영업정지 1개월    ┃",
+        "┗┷┷┛",
+    ])
+    assert lines == ["Ⅱ. 개별기준", "위반사항 | 근거법령 | 행정처분기준", "1. 영업허가를 받지 않은 경우 | 법 제5조 | 영업정지 1개월"]
+
+
+def test_chunkText_hard_splits_a_single_overlong_line():
+    chunks = chunkText(["가" * 3000], maxLen=1200)
+    assert [len(c) for c in chunks] == [1200, 1200, 600]

@@ -10,9 +10,10 @@ KINDS = {"법률", "시행령", "시행규칙", "고시"}
 FOOD_TYPES = {"공통", "일반식품", "건강기능식품"}
 
 
-def test_targets_cover_checklist_1_to_10():
+def test_targets_cover_checklist_1_to_9():
+    # 10번 「건강기능식품의 기준 및 규격」은 법제처가 본문을 첨부파일(zip)로만 줘서 수집 대상에서 뺐다 (2026-10-15)
     assert len(LAW_TARGETS) == 8
-    assert len(ADMRUL_TARGETS) == 2
+    assert [t["name"] for t in ADMRUL_TARGETS] == ["부당한 표시 또는 광고의 내용 기준"]
     for t in LAW_TARGETS + ADMRUL_TARGETS:
         assert t["kind"] in KINDS and t["food_type"] in FOOD_TYPES and t["name"]
 
