@@ -66,9 +66,11 @@ def loadMaterials(path):
 
 
 def buildActions(materials, collectedAt):
-    """materials.jsonl 행 → bulk 액션. _id 는 인정번호."""
+    """materials.jsonl 행 → bulk 액션. _id 는 인정번호 (원본에 인정번호가 없는 행은 뺀다)."""
     actions = []
     for m in materials:
+        if not m.get("_id"):
+            continue
         src = {k: v for k, v in m.items() if k != "_id"}
         src["collected_at"] = collectedAt
         actions.append({"_index": MATERIAL_INDEX, "_id": m["_id"], "_source": src})
@@ -110,7 +112,10 @@ def main():
     collectedAt = COLLECTED_PATH.read_text(encoding="utf-8").strip()
 
     ensureMaterialIndex(osClient)
-    actions = buildActions(loadMaterials(MATERIALS_PATH), collectedAt)
+    materials = loadMaterials(MATERIALS_PATH)
+    actions   = buildActions(materials, collectedAt)
+    if len(actions) < len(materials):
+        print(f"[INFO] 인정번호 없음 {len(materials) - len(actions)}건 제외")
     changed = selectChanged(actions, fetchExistingText(osClient, [a["_id"] for a in actions]))
     indexed = 0
     if changed:
