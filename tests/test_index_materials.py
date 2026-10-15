@@ -25,3 +25,9 @@ def test_selectChanged_skips_docs_with_same_text():
                            "2026-10-15")
     changed = selectChanged(actions, {"a": "같음", "b": "옛것"})
     assert [a["_id"] for a in changed] == ["b", "c"]
+
+
+def test_buildActions_skips_rows_without_recognition_number():
+    # 원본 I-0040의 풋사과농축분말(APPLOZIN)은 인정번호 칸이 비어 있다 (2026-10-15 확인)
+    mats = [{"_id": "", "material": "풋사과농축분말(APPLOZIN)", "text": "t"}, {"_id": "2024-20", "material": "홍삼", "text": "t"}]
+    assert [a["_id"] for a in buildActions(mats, "2026-10-15")] == ["2024-20"]
