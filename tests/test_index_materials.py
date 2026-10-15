@@ -1,0 +1,27 @@
+from pathlib import Path
+
+from index_materials import MATERIAL_INDEX, buildActions, loadMaterials, selectChanged
+
+ROOT = Path(__file__).resolve().parents[1]
+
+
+def test_loadMaterials_reads_all_731():
+    mats = loadMaterials(ROOT / "data" / "foodsafety" / "materials.jsonl")
+    assert len(mats) == 731
+    assert any(m["_id"] == "2024-20" and m["material"] == "홍삼" for m in mats)
+
+
+def test_buildActions_moves_id_out_of_source_and_adds_date():
+    mats = [{"_id": "2024-20", "material": "홍삼", "claims": ["혈당 조절에 도움을 줄 수 있음"], "text": "t"}]
+    action = buildActions(mats, "2026-10-15")[0]
+    assert action["_index"] == MATERIAL_INDEX and action["_id"] == "2024-20"
+    assert "_id" not in action["_source"]
+    assert action["_source"]["collected_at"] == "2026-10-15"
+    assert action["_source"]["claims"] == ["혈당 조절에 도움을 줄 수 있음"]
+
+
+def test_selectChanged_skips_docs_with_same_text():
+    actions = buildActions([{"_id": "a", "text": "같음"}, {"_id": "b", "text": "새것"}, {"_id": "c", "text": "추가"}],
+                           "2026-10-15")
+    changed = selectChanged(actions, {"a": "같음", "b": "옛것"})
+    assert [a["_id"] for a in changed] == ["b", "c"]

@@ -1,0 +1,86 @@
+import pytest
+
+from search_hybrid import (buildLawQuery, buildMaterialQuery, searchLaw, searchMaterials, toLawHit,
+                           toMaterialHit)
+
+VEC = [0.1, 0.2]
+FILTER = {"terms": {"food_type": ["일반식품", "공통"]}}
+
+
+def test_bm25_query_filters_food_type_and_common():
+    body = buildLawQuery("혈당 관리", None, "general", 5, "bm25")
+    assert body["size"] == 5
+    assert body["query"]["bool"]["filter"] == [FILTER]
+    assert body["query"]["bool"]["must"][0]["match"]["content"]["query"] == "혈당 관리"
+    assert "knn_vector" not in body["_source"]
+
+
+def test_knn_query_uses_vector_and_filter():
+    body = buildLawQuery("혈당 관리", VEC, "health", 5, "knn")
+    knn = body["query"]["knn"]["knn_vector"]
+    assert knn["vector"] == VEC and knn["k"] == 5
+    assert knn["filter"] == {"terms": {"food_type": ["건강기능식품", "공통"]}}
+
+
+def test_hybrid_query_combines_bm25_and_knn():
+    body = buildLawQuery("혈당 관리", VEC, "general", 5, "hybrid")
+    bm25, knn = body["query"]["hybrid"]["queries"]
+    assert bm25["bool"]["filter"] == [FILTER]
+    assert knn["knn"]["knn_vector"]["k"] == 10
+
+
+def test_buildLawQuery_rejects_bad_mode_and_food_type():
+    with pytest.raises(ValueError):
+        buildLawQuery("q", VEC, "general", 5, "fuzzy")
+    with pytest.raises(ValueError):
+        buildLawQuery("q", VEC, "cosmetic", 5, "hybrid")
+
+
+def test_material_query_is_hybrid_on_text():
+    body = buildMaterialQuery("혈당", VEC, 3)
+    bm25, knn = body["query"]["hybrid"]["queries"]
+    assert bm25["match"]["text"]["query"] == "혈당"
+    assert knn["knn"]["knn_vector"]["k"] == 6
+
+
+def test_hit_converters():
+    lawHit = toLawHit({"_id": "law_1_0008001_1", "_score": 0.87654,
+                       "_source": {"law_name": "법", "article_no": "8", "clause_no": "1", "content": "본문",
+                                   "collected_at": "2026-10-16"}}, 1)
+    assert lawHit["doc_id"] == "law_1_0008001_1" and lawHit["score"] == 0.8765 and lawHit["rank"] == 1
+    assert lawHit["title"] == "" and lawHit["collected_at"] == "2026-10-16"
+    mat = toMaterialHit({"_id": "2024-20", "_score": 1.0, "_source": {"material": "홍삼",
+                         "claims": ["혈당 조절에 도움을 줄 수 있음"]}}, 1)
+    assert mat["recog_no"] == "2024-20" and mat["claims"] == ["혈당 조절에 도움을 줄 수 있음"]
+
+
+class FakeOs:
+    def __init__(self):
+        self.calls = []
+
+    def search(self, index, body, params=None):
+        self.calls.append({"index": index, "body": body, "params": params or {}})
+        return {"hits": {"hits": [{"_id": "x", "_score": 1.0, "_source": {"law_name": "법", "material": "홍삼"}}]}}
+
+
+def test_searchLaw_bm25_does_not_embed_or_use_pipeline(monkeypatch):
+    import search_hybrid
+    monkeypatch.setattr(search_hybrid, "embedQuery", lambda cfg, q: pytest.fail("embed called"))
+    fake = FakeOs()
+    hits = searchLaw(fake, {}, "혈당", "general", topK=5, mode="bm25")
+    assert len(hits) == 1 and fake.calls[0]["index"] == "food-law-articles"
+    assert fake.calls[0]["params"] == {}
+
+
+def test_searchLaw_hybrid_uses_pipeline_and_given_vector(monkeypatch):
+    import search_hybrid
+    monkeypatch.setattr(search_hybrid, "embedQuery", lambda cfg, q: pytest.fail("embed called"))
+    fake = FakeOs()
+    searchLaw(fake, {}, "혈당", "general", queryVector=VEC)
+    assert fake.calls[0]["params"] == {"search_pipeline": "food-hybrid-pipeline"}
+
+
+def test_searchMaterials_targets_material_index():
+    fake = FakeOs()
+    hits = searchMaterials(fake, {}, "혈당", queryVector=VEC)
+    assert fake.calls[0]["index"] == "food-materials" and hits[0]["recog_no"] == "x"

@@ -36,8 +36,8 @@ def norm_id(v) -> str:
 
 
 def clean_material(name: str) -> str:
-    """원료명 끝의 인정번호 표기 제거: (기능성원료인정제2006-11호), (제2023-40호)"""
-    return re.sub(r"\((?:기능성원료인정)?\s*제?\d{4}-\d+호?\)\s*$", "", clean(name)).strip()
+    """원료명 끝의 인정번호 표기 제거: (기능성원료인정제2006-11호), (기능성원료인정New제2007-13호), (제2023-40호)"""
+    return re.sub(r"\((?:기능성원료인정)?\s*(?:New)?\s*제?\d{4}-\d+호?\)\s*$", "", clean(name)).strip()
 
 
 def same(a: str, b: str) -> bool:
