@@ -56,7 +56,7 @@ def loadConfig():
         'osPassword': os.getenv("OS_PASSWORD", ""),
 
         # Ollama
-        'ollamaHost': os.getenv("OLLAMA_HOST", "http://localhost:11434"),
+        'ollamaHost': os.getenv("OLLAMA_HOST", "http://127.0.0.1:11434"),
         'embedModel': os.getenv("EMBED_MODEL", "bge-m3"),
         'llmModel':   os.getenv("LLM_MODEL",   "gemma4:e4b"),
 

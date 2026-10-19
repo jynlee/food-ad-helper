@@ -72,7 +72,12 @@ def ensurePipeline(osClient):
 def embedQuery(cfg, queryText):
     """Ollama BGE-M3 로 질의 임베딩."""
     url  = cfg['ollamaHost'].rstrip("/") + EMBED_API_PATH
-    resp = requests.post(url, json={"model": cfg['embedModel'], "input": [queryText]}, timeout=30)
+    payload = {
+        "model":      cfg['embedModel'],
+        "input":      [queryText],
+        "keep_alive": "30m",  # 기본 5분이면 모델이 내려가 쉬고 난 뒤 첫 질문이 10초 넘게 걸림 (Gemma와 같이 30분 유지)
+    }
+    resp = requests.post(url, json=payload, timeout=30)
     resp.raise_for_status()
     embeddings = resp.json().get("embeddings", [])
     if not embeddings:

@@ -113,3 +113,25 @@ def test_text_fields_use_cjk_analyzer_for_korean():
     law = LAW_MAPPING["mappings"]["properties"]
     assert law["content"]["analyzer"] == "cjk" and law["title"]["analyzer"] == "cjk"
     assert MATERIAL_MAPPING["mappings"]["properties"]["text"]["analyzer"] == "cjk"
+
+
+def test_embed_query_keeps_model_loaded(monkeypatch):
+    # bge-m3는 기본 5분 쉬면 내려가서, 쉬고 난 뒤 첫 질문이 10초 넘게 걸렸다
+    import search_hybrid
+    sent = {}
+
+    class FakeResp:
+        def raise_for_status(self):
+            pass
+
+        def json(self):
+            return {"embeddings": [[0.1, 0.2]]}
+
+    def fakePost(url, json=None, timeout=None):
+        sent.update(json)
+        return FakeResp()
+
+    monkeypatch.setattr(search_hybrid.requests, "post", fakePost)
+    out = search_hybrid.embedQuery({"ollamaHost": "http://x", "embedModel": "bge-m3"}, "문구")
+    assert out == [0.1, 0.2]
+    assert sent["keep_alive"] == "30m"
