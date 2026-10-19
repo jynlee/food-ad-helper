@@ -54,8 +54,9 @@ flowchart LR
     R -. 큼·어려움 .-> S[추천 문구<br>다시 점검해 통과한 것만]
 ```
 
-- **근거 자료:** 식품표시광고법·식품위생법·건강기능식품법 등 법률·시행령·시행규칙 8개와 식약처 고시 2개(법제처 OpenAPI),
+- **근거 자료:** 식품표시광고법·식품위생법·건강기능식품법 등 법률·시행령·시행규칙 8개와 식약처 고시 1개(법제처 OpenAPI),
   식약처 건강기능식품 인정 기능성(식품안전나라)
+  - 고시 「건강기능식품의 기준 및 규격」은 법제처 API가 본문 없이 첨부 파일(HWP/PDF)만 제공해 제외했습니다.
 - **같은 문구는 같은 판단:** Gemma의 seed를 고정해, 같은 문구를 다시 넣어도 판단이 바뀌지 않습니다.
 
 ## 사용 기술
@@ -84,7 +85,7 @@ flowchart LR
 단계별로 실행하려면:
 
     python scripts/collect/collect_law.py        # 법률·시행령·시행규칙 8개 (--offline: data/law 저장본 사용)
-    python scripts/collect/collect_admrul.py     # 식약처 고시 2개
+    python scripts/collect/collect_admrul.py     # 식약처 고시 1개
     python scripts/collect/index_materials.py    # 식약처 인정 기능성 (인정번호 없는 1건 제외 730건)
     python scripts/rag/embed_index.py            # 두 인덱스 임베딩
 

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 collect_admrul.py
-법제처 API에서 식약처 고시 2개(행정규칙)를 받아 food-law-articles 인덱스에 적재.
+법제처 API에서 식약처 고시(행정규칙)를 받아 food-law-articles 인덱스에 적재.
 원본 JSON은 data/law/admrul_<행정규칙일련번호>.json 에 저장.
 
 사용법:
