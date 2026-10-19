@@ -1,5 +1,5 @@
 from answer_format import (DISCLAIMER, NO_BASIS_PARSED, OUT_OF_SCOPE_ACTIONS, buildResponse, latestCollectedAt,
-                           parseAnswer, resolveBasis)
+                           articleText, parseAnswer, resolveBasis, shortSummary)
 
 REFS = {
     1: {"type": "law", "law_name": "식품 등의 표시·광고에 관한 법률", "article_no": "8", "clause_no": "1",
@@ -58,10 +58,85 @@ def test_resolveBasis_maps_numbers_and_drops_unknown_or_duplicate():
     items, used = resolveBasis([(1, "요약1"), (9, "없는 번호"), (1, "중복"), (2, ""), (3, "인정")], REFS)
     assert used == [1, 2, 3]
     assert items[0] == {"type": "law", "law_name": "식품 등의 표시·광고에 관한 법률", "article": "제8조 1항",
-                        "summary": "요약1", "effective_date": "20250101"}
+                        "summary": "요약1", "effective_date": "20250101", "title": "", "content": ""}
     assert items[1]["article"] == "별표 1"
     assert items[2] == {"type": "material", "material": "홍삼", "recog_no": "2024-20",
                         "claim": "혈당 조절에 도움을 줄 수 있음", "summary": "인정"}
+
+
+def test_resolveBasis_drops_material_summary_that_repeats_context():
+    echo = "원료: 홍삼 (인정번호 2024-20) / 인정 문구: 혈당 조절에 도움을 줄 수 있음"
+    items, _ = resolveBasis([(3, echo)], REFS)
+    assert items[0]["summary"] == ""
+    items, _ = resolveBasis([(3, "혈당 조절에 도움을 줄 수 있음까지만 인정됩니다.")], REFS)
+    assert items[0]["summary"] == ""
+
+
+def test_resolveBasis_keeps_only_first_sentence_of_summary():
+    items, _ = resolveBasis([(1, "질병 치료 표현을 금지합니다. 그래서 이 문구는 문제가 됩니다. 추가 설명입니다.")], REFS)
+    assert items[0]["summary"] == "질병 치료 표현을 금지합니다."
+
+
+def test_shortSummary_does_not_cut_at_list_numbers():
+    law = {"type": "law"}
+    s = "1. 질병의 예방ㆍ치료에 효능이 있는 것으로 인식할 우려가 있는 표시 또는 광고에 해당합니다. 추가 설명입니다."
+    assert shortSummary(s, law) == "질병의 예방ㆍ치료에 효능이 있는 것으로 인식할 우려가 있는 표시 또는 광고에 해당합니다."
+    s = "가. 질병 발생을 예방한다는 표시ㆍ광고. 다만 예외가 있습니다."
+    assert shortSummary(s, law) == "질병 발생을 예방한다는 표시ㆍ광고. 다만 예외가 있습니다."
+
+
+def test_shortSummary_drops_bare_item_numbers():
+    for s in ("1.", "1. 다.", "가.", "3. 나 ", "제1호 다목"):
+        assert shortSummary(s, {"type": "law"}) == ""
+
+
+LONG_ARTICLE = ("제8조(부당한 표시 또는 광고행위의 금지) 1항\n① 누구든지 식품등의 명칭 등에 관하여 "
+                "다음 각 호의 표시 또는 광고를 하여서는 아니 된다. <개정 2021.8.17>\n"
+                "1. 질병의 예방ㆍ치료에 효능이 있는 것으로 인식할 우려가 있는 표시 또는 광고\n" + "2. 기타 " * 40)
+
+
+def test_shortSummary_strips_leading_item_numbers():
+    s = "1. 가. '면역력'은 질병의 발생을 예방한다는 내용으로 해석될 여지가 있어 주의가 필요합니다."
+    assert shortSummary(s, {"type": "law"}) == "'면역력'은 질병의 발생을 예방한다는 내용으로 해석될 여지가 있어 주의가 필요합니다."
+
+
+def test_shortSummary_drops_copied_article_text():
+    s = ("■ 식품 등의 표시ㆍ광고에 관한 법률 시행령 [별표 1] <개정 2023. 12. 26.> 부당한 표시 또는 광고의 내용"
+         "(제3조제1항 관련) 나. 질병 또는 질병군에 치료 효과가 있다는 내용의 표시ㆍ광고")
+    assert shortSummary(s, {"type": "law"}) == ""
+
+
+def test_resolveBasis_law_sends_title_and_full_article_text():
+    refs = {1: dict(REFS[1], title="부당한 표시 또는 광고행위의 금지", content=LONG_ARTICLE)}
+    items, _ = resolveBasis([(1, "‘면역력’은 질병 예방 효과처럼 보일 수 있어요.")], refs)
+    item = items[0]
+    assert item["title"] == "부당한 표시 또는 광고행위의 금지"
+    text = item["content"]
+    assert text.startswith("① 누구든지 식품등의 명칭") and "<개정" not in text and "제8조(" not in text
+    assert "\n1. 질병의 예방" in text            # 호 단위 줄바꿈은 살린다
+    assert text.endswith("2. 기타")             # 잘라내지 않는다
+    assert "excerpt" not in item
+
+
+def test_resolveBasis_law_fills_empty_summary_from_title():
+    refs = {1: dict(REFS[1], title="부당한 표시 또는 광고의 내용(제3조제1항 관련)", content="본문")}
+    for summary in ("", "1. 다."):
+        items, _ = resolveBasis([(1, summary)], refs)
+        assert items[0]["summary"] == "이 조문은 ‘부당한 표시 또는 광고의 내용’에 관한 조항입니다."
+    items, _ = resolveBasis([(1, "")], {1: dict(REFS[1], content="본문")})   # 제목도 없으면 빈칸
+    assert items[0]["summary"] == ""
+
+
+def test_articleText_strips_repeated_heading():
+    assert articleText("제8조(광고의 기준)\n제8조(광고의 기준) 법 제7조제2항에 따른 사항은 별표 6과 같다.") == \
+        "법 제7조제2항에 따른 사항은 별표 6과 같다."
+
+
+def test_articleText_strips_annex_heading():
+    title = "부당한 표시 또는 광고의 내용(제3조제1항 관련)"
+    content = (f"[별표 1] {title} ■ 식품 등의 표시ㆍ광고에 관한 법률 시행령 [별표 1] {title} "
+               "1. 질병의 예방ㆍ치료에 효능이 있는 것으로 인식할 우려가 있는 표시 또는 광고")
+    assert articleText(content, title) == "1. 질병의 예방ㆍ치료에 효능이 있는 것으로 인식할 우려가 있는 표시 또는 광고"
 
 
 def test_latestCollectedAt_ignores_empty():

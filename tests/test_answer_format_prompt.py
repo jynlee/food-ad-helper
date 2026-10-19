@@ -57,3 +57,18 @@ def test_disclaimer_text_is_exact():
 
 def test_fixByteFallbackTokens_restores_hangul():
     assert fixByteFallbackTokens("그래<0xEB><0x89><0xBC>") == "그래뉼"
+
+
+def test_system_prompt_treats_plain_description_and_clean_ad_as_low():
+    # 2026-10-19: "쫀득한 식감" → 어려움, 효능 표현 없는 홍보 문구 → 범위밖 으로 잘못 판단해서 고쳤다
+    assert "쫀득한" in SYSTEM_PROMPT and "범위밖이 아니라 낮음" in SYSTEM_PROMPT
+
+
+def test_system_prompt_puts_efficacy_before_plain_description():
+    # 2026-10-19: "우리 카페 쌍화차, 감기 뚝! 면역력 최고"가 평범한 말 규칙 때문에 낮음으로 나와서 판단 순서를 못 박았다
+    assert "하나라도 있으면 나머지가 평범해도 큼" in SYSTEM_PROMPT
+
+
+def test_system_prompt_keeps_exaggeration_unsure_even_about_taste():
+    # 2026-10-19: 평범한 말 규칙을 넣은 뒤 "우리 동네 최고의 김밥", "무첨가 수제 딸기잼"이 낮음으로 나왔다 (전에는 어려움)
+    assert "맛을 말하는 데 쓰여도 어려움" in SYSTEM_PROMPT

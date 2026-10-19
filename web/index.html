@@ -8,136 +8,223 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap">
 <style>
-/* 데모 화면(claude.ai artifact) 디자인을 그대로 옮기고, 식품 종류 선택을 두 칸 토글로 바꿈 */
+/* 데모 화면(claude.ai artifact) 디자인을 바탕으로, 가게 선택 → 쓸 곳 → 문구 순서의 큰 버튼 화면으로 바꿈 (50~60대 사장님이 휴대폰으로 쓰는 것을 기준으로 글씨·버튼을 키움) */
 :root{
-  --bg:#EEF1F6;--surface:#FFFFFF;--surface2:#F4F6FA;--ink:#15202E;--muted:#58677B;--line:#D8DFEA;
+  --bg:#EEF1F6;--surface:#FFFFFF;--surface2:#F4F6FA;--ink:#15202E;--muted:#4E5D71;--line:#D3DAE6;
   --accent:#1F5FA8;--on-accent:#FFFFFF;--accent-bg:#E3EDFA;
   --bad:#A32A1F;--bad-bg:#FBE4E0;--ok:#2C6B3B;--ok-bg:#E1F1E5;--warn:#7A5200;--warn-bg:#FFF0C7;--none:#3B4A63;--none-bg:#E8ECF2;
   --f-body:"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
 }
 @media (prefers-color-scheme:dark){:root{
-  --bg:#0E131B;--surface:#151C27;--surface2:#1B2431;--ink:#E7EDF5;--muted:#9DAEC4;--line:#273448;
+  --bg:#0E131B;--surface:#151C27;--surface2:#1B2431;--ink:#E7EDF5;--muted:#A7B6CA;--line:#2C3A50;
   --accent:#7DB3F0;--on-accent:#0E131B;--accent-bg:#162A44;
   --bad:#FF9B8E;--bad-bg:#43201C;--ok:#8FD7A2;--ok-bg:#183222;--warn:#F0C25A;--warn-bg:#3A2D0E;--none:#B7C4DB;--none-bg:#232C3B;
   color-scheme:dark}}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.6;padding:0 16px}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:17px;line-height:1.6;padding:0 16px}
 h1,h2,h4,p{margin:0}
 button,input{font:inherit;color:inherit}
-:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+[hidden]{display:none!important}
 .wrap{max-width:1080px;margin:0 auto}
 .top{margin:0 -16px;padding:12px 16px;background:var(--surface);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
 .brand{display:flex;align-items:center;gap:12px}
-.mark{flex:none;width:38px;height:38px;border-radius:10px;background:var(--accent);display:grid;place-items:center}
+.mark{flex:none;width:40px;height:40px;border-radius:10px;background:var(--accent);display:grid;place-items:center}
 .mark svg{stroke:var(--on-accent)}
-.brand h1{font-size:18px;font-weight:700;line-height:1.25}
-.brand small{display:block;font-size:12.5px;color:var(--muted)}
-.layout{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(0,1fr);gap:16px;padding:24px 0 8px;align-items:start}
+.brand h1{font-size:20px;font-weight:700;line-height:1.25}
+.brand small{display:block;font-size:14px;color:var(--muted)}
+.layout{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(0,1fr);gap:16px;padding:20px 0 8px;align-items:start}
 @media (max-width:860px){.layout{grid-template-columns:minmax(0,1fr)}}
 .card{background:var(--surface);border:1px solid var(--line);border-radius:16px;min-width:0}
 .chat{display:flex;flex-direction:column}
-.row{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;padding:12px 20px;border-bottom:1px solid var(--line)}
-.row .lbl{font-size:13px;font-weight:600;color:var(--muted)}
-.row small{font-size:12.5px;color:var(--muted)}
-.seg{display:inline-flex;border:1.5px solid var(--line);border-radius:10px;overflow:hidden}
-.seg.empty{border-color:var(--accent)}
-.seg button{min-height:42px;padding:0 18px;border:0;background:var(--surface2);cursor:pointer;font-weight:600}
-.seg button+button{border-left:1.5px solid var(--line)}
-.seg button[aria-checked="true"]{background:var(--accent);color:var(--on-accent)}
-.useb{min-height:36px;padding:0 14px;border-radius:999px;border:1.5px solid var(--line);background:var(--surface);cursor:pointer;font-size:14px}
-.useb[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-bg);color:var(--accent);font-weight:600}
-.log{display:flex;flex-direction:column;gap:14px;padding:20px;height:clamp(380px,58vh,580px);overflow-y:auto;overscroll-behavior:contain}
-.msg{display:flex;flex-direction:column;gap:8px;min-width:0}
-.msg.user{align-self:flex-end;max-width:86%}
-.bubble{padding:10px 14px;border-radius:14px;overflow-wrap:anywhere}
-.msg.user .bubble{background:var(--accent);color:var(--on-accent);border-bottom-right-radius:4px}
-.msg.bot .bubble{background:var(--surface2);border:1px solid var(--line);border-bottom-left-radius:4px;align-self:flex-start}
-.divider{align-self:center;font-size:12.5px;color:var(--muted);background:var(--surface2);border:1px solid var(--line);padding:3px 12px;border-radius:999px}
-.chips{display:flex;flex-wrap:wrap;gap:8px}
-.chips-label{font-size:12.5px;color:var(--muted);font-weight:600}
-.chip{min-height:40px;padding:6px 14px;border-radius:999px;border:1px solid var(--line);background:var(--surface);cursor:pointer;font-size:14px;text-align:left}
-.chip:hover{border-color:var(--accent);background:var(--accent-bg)}
-.chip.scope{border-style:dashed}
-.chip.scope i{font-style:normal;font-size:12px;font-weight:600;color:var(--warn);margin-right:6px}
-.typing{display:flex;gap:5px;padding:14px}
-.typing i{width:7px;height:7px;border-radius:50%;background:var(--muted);animation:blink 1s infinite ease-in-out}
+
+/* 단계 */
+.step{padding:20px 20px 18px;border-bottom:1px solid var(--line);transition:opacity .2s}
+.step.off{opacity:.4}
+.step-no{font-size:14px;font-weight:700;color:var(--accent)}
+.step h2{font-size:21px;font-weight:700;line-height:1.35;margin:2px 0 12px}
+.step .q-sub{font-size:18px;font-weight:700;margin:18px 0 10px}
+.tiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+@media (max-width:560px){.tiles{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.tiles.small{grid-template-columns:repeat(auto-fit,minmax(130px,1fr))}
+.tile{min-height:64px;padding:12px 8px;border-radius:14px;border:2px solid var(--line);background:var(--surface);cursor:pointer;font-weight:700;font-size:17px;line-height:1.35;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;text-align:center}
+.tile .e{font-size:32px;line-height:1}
+.tiles.small .tile{flex-direction:row;gap:8px;min-height:56px}
+.tiles.small .tile .e{font-size:24px}
+.tile:hover:not(:disabled){border-color:var(--accent)}
+.tile[aria-checked="true"]{border:3px solid var(--accent);background:var(--accent-bg);color:var(--accent)}
+.tile{position:relative}
+.tile[aria-checked="true"]::after{content:"✓";position:absolute;top:6px;right:10px;font-size:16px;font-weight:800}
+.tile:disabled{cursor:not-allowed}
+.hint{font-size:15px;color:var(--muted);margin-top:10px}
+
+/* 예시 문구·입력 */
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+.chip{min-height:46px;padding:8px 14px;border-radius:12px;border:2px dashed var(--line);background:var(--surface);cursor:pointer;font-size:16px;text-align:left}
+.chip:hover:not(:disabled){border-color:var(--accent);background:var(--accent-bg)}
+.chip:disabled{cursor:not-allowed}
+.chip.scope i{font-style:normal;font-size:14px;font-weight:700;color:var(--warn);margin-right:6px}
+.chips-label{display:block;font-size:15px;color:var(--muted);font-weight:600;margin-bottom:8px}
+.composer{display:flex;gap:8px}
+.composer input{flex:1;min-width:0;min-height:54px;padding:0 14px;border-radius:12px;border:2px solid var(--line);background:var(--surface);font-size:17px}
+.composer button{min-height:54px;padding:0 22px;border-radius:12px;border:0;background:var(--accent);color:var(--on-accent);font-weight:700;font-size:18px;cursor:pointer}
+.composer :disabled{opacity:.55;cursor:not-allowed}
+.under{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:10px;font-size:15px;color:var(--muted)}
+.linkbtn{border:0;background:none;color:var(--accent);font-weight:600;cursor:pointer;padding:0;text-decoration:underline;text-underline-offset:3px}
+
+/* 결과 */
+.log{display:flex;flex-direction:column;gap:14px;padding:20px}
+.log:empty::before{content:"점검 결과가 여기에 나와요.";color:var(--muted);font-size:16px;text-align:center;padding:14px 0}
+.bubble{padding:12px 16px;border-radius:14px;background:var(--surface2);border:1px solid var(--line);overflow-wrap:anywhere}
+.typing{display:flex;align-items:center;gap:5px;padding:16px;align-self:flex-start}
+.typing span{margin-left:8px;font-size:15px;color:var(--muted)}
+.typing i{width:8px;height:8px;border-radius:50%;background:var(--muted);animation:blink 1s infinite ease-in-out}
 .typing i:nth-child(2){animation-delay:.15s}.typing i:nth-child(3){animation-delay:.3s}
 @keyframes blink{0%,80%,100%{opacity:.25}40%{opacity:1}}
-@media (prefers-reduced-motion:reduce){.typing i{animation:none;opacity:.6}}
-.ans{background:var(--surface);border:1px solid var(--line);border-radius:14px;border-bottom-left-radius:4px;padding:16px 18px;display:flex;flex-direction:column;gap:12px;min-width:0}
+@media (prefers-reduced-motion:reduce){.typing i{animation:none;opacity:.6}.step{transition:none}.sug-bar i{animation:none;width:100%;opacity:.5}}
+.ans{background:var(--surface);border:2px solid var(--line);border-radius:14px;padding:18px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.ans-q{font-size:16px;color:var(--muted);overflow-wrap:anywhere}
+.ans-q b{color:var(--ink)}
 .ans-head{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
-.tag{font-size:12.5px;font-weight:600;padding:2px 10px;border-radius:6px;background:var(--surface2);color:var(--muted);border:1px solid var(--line)}
-.v{font-size:13px;font-weight:700;padding:3px 12px;border-radius:999px;display:inline-flex;align-items:center;gap:6px}
-.v::before{content:"";width:8px;height:8px;border-radius:50%;background:currentColor}
-.v-high{background:var(--bad-bg);color:var(--bad)}
-.v-low{background:var(--ok-bg);color:var(--ok)}
-.v-unsure{background:var(--warn-bg);color:var(--warn)}
-.v-out_of_scope{background:var(--none-bg);color:var(--none)}
-.concl{font-size:15.5px;font-weight:600;line-height:1.55;overflow-wrap:anywhere}
-.raw{white-space:pre-wrap;font-size:14px;color:var(--muted);overflow-wrap:anywhere}
-.ans h4{font-size:12.5px;font-weight:700;color:var(--muted)}
-.ans ol,.ans ul{margin:4px 0 0;padding-left:20px;display:flex;flex-direction:column;gap:5px}
-.ans ul.basis{list-style:none;padding:0;gap:8px}
-.basis li{display:grid;grid-template-columns:auto minmax(0,1fr);gap:10px;align-items:start;font-size:14px}
-.art{font-size:12px;font-weight:600;padding:2px 9px;border-radius:6px;background:var(--surface2);border:1px solid var(--line);white-space:nowrap;color:var(--muted)}
-.foot{font-size:12.5px;color:var(--muted);border-top:1px solid var(--line);padding-top:10px}
-.act{align-self:flex-start;min-height:40px;padding:0 14px;border-radius:8px;border:1px solid var(--accent);background:var(--accent-bg);color:var(--accent);font-weight:600;cursor:pointer}
-.composer{display:flex;gap:8px;padding:14px 20px 4px;border-top:1px solid var(--line)}
-.composer input{flex:1;min-width:0;min-height:46px;padding:0 14px;border-radius:10px;border:1.5px solid var(--line);background:var(--surface)}
-.composer button{min-height:46px;padding:0 20px;border-radius:10px;border:0;background:var(--accent);color:var(--on-accent);font-weight:600;cursor:pointer}
-.composer :disabled{opacity:.55;cursor:not-allowed}
-.under{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:6px 20px 14px;font-size:12.5px;color:var(--muted)}
-.linkbtn{border:0;background:none;color:var(--accent);font-weight:600;cursor:pointer;padding:0;text-decoration:underline;text-underline-offset:3px}
+.tag{font-size:14px;font-weight:600;padding:2px 10px;border-radius:6px;background:var(--surface2);color:var(--muted);border:1px solid var(--line)}
+.v{font-size:15px;font-weight:700;padding:4px 14px;border-radius:999px;display:inline-flex;align-items:center;gap:6px}
+.ans-head .v{font-size:19px;padding:6px 16px}
+.v::before{font-weight:800}
+.v-high{background:var(--bad-bg);color:var(--bad)}.v-high::before{content:"⚠"}
+.v-low{background:var(--ok-bg);color:var(--ok)}.v-low::before{content:"✓"}
+.v-unsure{background:var(--warn-bg);color:var(--warn)}.v-unsure::before{content:"?"}
+.v-out_of_scope{background:var(--none-bg);color:var(--none)}.v-out_of_scope::before{content:"–"}
+.concl{font-size:18px;font-weight:600;line-height:1.55;overflow-wrap:anywhere}
+.raw{white-space:pre-wrap;font-size:16px;color:var(--muted);overflow-wrap:anywhere}
+.ans h4{font-size:15px;font-weight:700;color:var(--muted)}
+.ans ol,.ans ul{margin:4px 0 0;padding-left:22px;display:flex;flex-direction:column;gap:6px}
+.basis-box{border:2px solid var(--line);border-radius:12px}
+.basis-box summary{min-height:50px;display:flex;align-items:center;padding:8px 14px;font-weight:700;font-size:16px;color:var(--accent);cursor:pointer}
+.basis-box[open] summary{border-bottom:1px solid var(--line)}
+.ans ul.basis{list-style:none;padding:12px 14px;margin:0;gap:14px}
+.basis li{display:flex;flex-direction:column;align-items:flex-start;gap:3px;font-size:16px;overflow-wrap:anywhere}
+.basis li+li{border-top:1px dashed var(--line);padding-top:12px}
+.basis li p{margin:0}
+.basis li small{font-size:14px;color:var(--muted)}
+.basis li .why::before{content:"→ ";color:var(--accent);font-weight:700}
+.raw-law{align-self:stretch;margin-top:2px}
+.raw-law summary{display:inline-flex;align-items:center;min-height:40px;font-size:15px;font-weight:600;color:var(--accent);cursor:pointer}
+.raw-law p{white-space:pre-line;font-size:15px;line-height:1.7;color:var(--muted);background:var(--surface2);border-left:3px solid var(--line);padding:8px 12px;border-radius:0 6px 6px 0;max-height:320px;overflow-y:auto}
+.src{font-size:13px;font-weight:700;padding:1px 9px;border-radius:6px}
+.src-law{background:var(--accent-bg);color:var(--accent)}
+.src-mat{background:var(--ok-bg);color:var(--ok)}
+.foot{font-size:14px;color:var(--muted);border-top:1px solid var(--line);padding-top:10px}
+.save-btn{align-self:flex-start;min-height:40px;padding:0 12px;border-radius:8px;border:1.5px solid var(--line);background:var(--surface);font-size:15px;font-weight:600;cursor:pointer}
+.save-btn:disabled{font-size:14px;font-weight:600}
+.save-btn:hover:not(:disabled){border-color:var(--accent)}
+.save-btn:disabled{border-color:var(--ok);color:var(--ok);background:var(--ok-bg);cursor:default}
+.ans-btns{display:flex;flex-wrap:wrap;gap:8px}
+.sug-btn{min-height:40px;padding:0 12px;border-radius:8px;border:1.5px solid var(--accent);background:var(--accent-bg);color:var(--accent);font-size:15px;font-weight:700;cursor:pointer}
+.sug-btn:disabled{opacity:.5;cursor:default}
+.sug{border:2px solid var(--ok);background:var(--ok-bg);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:8px}
+.sug.wait{border-color:var(--line);background:var(--surface2)}
+.sug.fail{border-color:var(--warn);background:var(--warn-bg)}
+.sug h5{margin:0;font-size:17px;color:var(--ink)}
+.sug p{margin:0;font-size:15px;line-height:1.55;color:var(--ink);overflow-wrap:anywhere}
+.sug .v{align-self:flex-start}
+.sug-phrase{font-size:18px!important;font-weight:700;background:var(--surface);border:1.5px solid var(--line);border-radius:8px;padding:10px 12px}
+.sug-bar{height:8px;border-radius:99px;background:var(--line);overflow:hidden}
+.sug-bar i{display:block;width:40%;height:100%;background:var(--accent);animation:slide 1.4s infinite ease-in-out}
+@keyframes slide{0%{transform:translateX(-100%)}100%{transform:translateX(250%)}}
+.copy-btn{align-self:flex-start;min-height:44px;padding:0 14px;border-radius:8px;border:2px solid var(--ok);background:var(--surface);color:var(--ok);font-size:16px;font-weight:700;cursor:pointer}
+.saved-list{list-style:none;padding:0!important;margin:8px 0 0!important;gap:8px!important}
+.saved-empty{color:var(--muted);font-size:15px}
+.saved-item{display:flex;flex-direction:column;gap:8px}
+.saved-row{display:flex;gap:6px;align-items:stretch}
+.saved-open{flex:1;min-width:0;min-height:52px;display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;padding:8px 10px;border:2px solid var(--line);border-radius:10px;background:var(--surface);cursor:pointer;text-align:left}
+.saved-open[aria-expanded="true"]{border-color:var(--accent);background:var(--accent-bg)}
+.saved-open .v{font-size:13px;padding:1px 9px}
+.saved-q{flex:1 1 100%;font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.saved-date{font-size:13px;color:var(--muted)}
+.saved-del{flex:none;min-width:56px;border:2px solid var(--line);border-radius:10px;background:var(--surface);color:var(--bad);font-weight:700;cursor:pointer}
+.saved-card .ans{border-color:var(--accent)}
+.act{align-self:flex-start;min-height:48px;padding:0 16px;border-radius:10px;border:2px solid var(--accent);background:var(--accent-bg);color:var(--accent);font-weight:700;cursor:pointer}
+
+/* 오른쪽 안내 */
 .side{display:flex;flex-direction:column;gap:16px}
 .side .card{padding:18px 20px;display:flex;flex-direction:column;gap:10px}
-.side h2{font-size:15px;font-weight:700}
-.side ul{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:4px;font-size:14px}
+.side h2{font-size:17px;font-weight:700}
+.side ul{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:4px;font-size:16px}
 .side .out{color:var(--muted)}
-.sub{font-size:12.5px;font-weight:700;color:var(--muted)}
-.legend{display:flex;flex-direction:column;gap:8px;font-size:13.5px}
+.sub{font-size:14px;font-weight:700;color:var(--muted)}
+.legend{display:flex;flex-direction:column;gap:8px;font-size:15px}
 .legend div{display:flex;gap:10px;align-items:flex-start}
-.legend .v{flex:none;font-size:12.5px;padding:2px 10px}
-details summary{cursor:pointer;font-weight:600;font-size:14px}
-.laws{display:grid;gap:3px;margin-top:6px;font-size:13.5px}
+.legend .v{flex:none;font-size:14px;padding:2px 10px}
+details summary{cursor:pointer;font-weight:600;font-size:16px}
+.laws{display:grid;gap:3px;margin-top:6px;font-size:15px}
 .laws span{display:flex;justify-content:space-between;gap:10px;border-bottom:1px solid var(--line);padding-block:4px}
-.laws em{font-style:normal;color:var(--muted);font-size:12.5px;white-space:nowrap}
-footer{margin-top:32px;border-top:1px solid var(--line);padding:20px 0 36px;font-size:12.5px;color:var(--muted)}
+.laws em{font-style:normal;color:var(--muted);font-size:14px;white-space:nowrap}
+footer{margin-top:32px;border-top:1px solid var(--line);padding:20px 0 36px;font-size:14px;color:var(--muted)}
 </style>
 </head>
 <body>
 <header class="top">
   <div class="wrap brand">
     <span class="mark"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 3h6l1 4H8l1-4z"/><path d="M8 7h8v12a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2V7z"/><path d="M10 12h4M10 16h4"/></svg></span>
-    <div><h1>식품 표시·광고 도우미 챗봇</h1><small>메뉴판·상세페이지·SNS 문구가 법에 걸릴 수 있는지 근거 조문과 함께 안내</small></div>
+    <div><h1>식품 표시·광고 도우미</h1><small>가게를 고르고 문구를 넣으면, 법에 걸릴 수 있는지 근거 조문과 함께 알려 드려요</small></div>
   </div>
 </header>
 
 <main class="wrap layout">
-  <section class="card chat" aria-label="챗봇 대화">
-    <div class="row">
-      <span class="lbl" id="kind-label">식품 종류</span>
-      <div class="seg empty" id="seg" role="radiogroup" aria-labelledby="kind-label">
-        <button type="button" role="radio" aria-checked="false" id="kind-general" data-kind="general">일반식품</button>
-        <button type="button" role="radio" aria-checked="false" id="kind-health" data-kind="health">건강기능식품</button>
+  <section class="card chat" aria-label="광고 문구 점검">
+    <div class="step" id="step1">
+      <p class="step-no">1단계</p>
+      <h2 id="shop-label">어떤 가게를 운영하세요?</h2>
+      <div class="tiles" role="radiogroup" aria-labelledby="shop-label">
+        <button type="button" class="tile" role="radio" aria-checked="false" id="shop-cafe" data-shop="cafe"><span class="e" aria-hidden="true">☕</span>카페</button>
+        <button type="button" class="tile" role="radio" aria-checked="false" id="shop-restaurant" data-shop="restaurant"><span class="e" aria-hidden="true">🍽️</span>음식점</button>
+        <button type="button" class="tile" role="radio" aria-checked="false" id="shop-banchan" data-shop="banchan"><span class="e" aria-hidden="true">🥗</span>반찬가게</button>
+        <button type="button" class="tile" role="radio" aria-checked="false" id="shop-online" data-shop="online"><span class="e" aria-hidden="true">📦</span>온라인 판매</button>
       </div>
-      <small id="kind-hint">먼저 식품 종류를 선택하세요</small>
+      <div id="mark-row" hidden>
+        <p class="q-sub" id="mark-label">제품 포장에 ‘건강기능식품’ 마크가 있나요?</p>
+        <div class="tiles small" role="radiogroup" aria-labelledby="mark-label">
+          <button type="button" class="tile" role="radio" aria-checked="false" id="mark-yes" data-mark="yes">네, 있어요</button>
+          <button type="button" class="tile" role="radio" aria-checked="false" id="mark-no" data-mark="no">아니요</button>
+          <button type="button" class="tile" role="radio" aria-checked="false" id="mark-unsure" data-mark="unsure">잘 모르겠어요</button>
+        </div>
+        <p class="hint" id="mark-hint" hidden>포장 앞면이나 뒷면에 ‘건강기능식품’이라는 글자와 마크가 있는지 확인해 보세요. 확인이 어려우면 더 엄격한 일반식품 기준으로 점검해 드려요.</p>
+      </div>
     </div>
-    <div class="row" role="group" aria-label="문구를 쓸 곳">
-      <span class="lbl">사용처</span>
-      <button type="button" class="useb" data-use="menu" aria-pressed="false">메뉴판</button>
-      <button type="button" class="useb" data-use="page" aria-pressed="false">상세페이지</button>
-      <button type="button" class="useb" data-use="sns" aria-pressed="false">SNS 홍보 문구</button>
-      <small>선택 사항 · 다시 누르면 해제</small>
+
+    <div class="step off" id="step2">
+      <p class="step-no">2단계</p>
+      <h2 id="use-label">어디에 쓸 문구인가요?</h2>
+      <div class="tiles small" role="radiogroup" aria-labelledby="use-label">
+        <button type="button" class="tile useb" role="radio" aria-checked="false" data-use="menu" disabled><span class="e" aria-hidden="true">📋</span>메뉴판·가격표</button>
+        <button type="button" class="tile useb" role="radio" aria-checked="false" data-use="page" disabled hidden><span class="e" aria-hidden="true">🛒</span>상세페이지</button>
+        <button type="button" class="tile useb" role="radio" aria-checked="false" data-use="sns" disabled><span class="e" aria-hidden="true">📱</span>SNS 홍보</button>
+      </div>
     </div>
-    <div class="log" id="log" role="log" aria-live="polite" aria-label="대화 내용"></div>
-    <form class="composer" id="form" autocomplete="off">
-      <input type="text" id="q" maxlength="2000" disabled placeholder="먼저 식품 종류를 선택하세요" aria-label="광고 문구 또는 질문 입력">
-      <button type="submit" id="send" disabled>점검</button>
-    </form>
-    <div class="under"><span id="hint">식품 종류를 선택하면 문구를 입력할 수 있어요.</span><button type="button" class="linkbtn" id="clear">대화 지우기</button></div>
+
+    <div class="step off" id="step3">
+      <p class="step-no">3단계</p>
+      <h2>점검할 문구</h2>
+      <div id="examples"></div>
+      <form class="composer" id="form" autocomplete="off">
+        <input type="text" id="q" maxlength="2000" disabled placeholder="먼저 1단계에서 가게를 골라 주세요" aria-label="광고 문구 입력">
+        <button type="submit" id="send" disabled>점검</button>
+      </form>
+      <div class="under"><span id="hint">가게를 고르면 문구를 입력할 수 있어요.</span><button type="button" class="linkbtn" id="clear">결과 지우기</button></div>
+    </div>
+
+    <div class="log" id="log" role="log" aria-live="polite" aria-label="점검 결과"></div>
   </section>
 
   <aside class="side" aria-label="안내">
+    <div class="card">
+      <h2>저장한 결과</h2>
+      <details id="saved-box">
+        <summary>목록 보기 (<span id="saved-count">0</span>개)</summary>
+        <ul class="saved-list" id="saved-list"></ul>
+      </details>
+      <p class="sub">이 기기의 브라우저에만 저장돼요.</p>
+    </div>
     <div class="card">
       <h2>이런 분이 쓰세요</h2>
       <ul><li>카페·음식점·반찬가게 운영자 <span class="out">— 메뉴판, SNS</span></li><li>온라인 식품 판매자 <span class="out">— 상세페이지, SNS</span></li></ul>
@@ -156,7 +243,7 @@ footer{margin-top:32px;border-top:1px solid var(--line);padding:20px 0 36px;font
         <div><span class="v v-high">위반 소지 큼</span><span>조문에 비추어 문제 될 가능성이 높음</span></div>
         <div><span class="v v-unsure">판단 어려움</span><span>맥락이나 제품 정보가 필요함</span></div>
         <div><span class="v v-low">위반 소지 낮음</span><span>사실에 맞는 표현이면 일반적으로 문제 적음</span></div>
-        <div><span class="v v-out_of_scope">범위 밖</span><span>이 챗봇이 점검하지 않는 질문</span></div>
+        <div><span class="v v-out_of_scope">범위 밖</span><span>이 도우미가 점검하지 않는 질문</span></div>
       </div>
       <p class="sub">“위법입니다”처럼 단정하지 않아요.</p>
     </div>
@@ -177,66 +264,75 @@ footer{margin-top:32px;border-top:1px solid var(--line);padding:20px 0 36px;font
   </aside>
 </main>
 
-<footer><div class="wrap">식품 표시·광고 도우미 챗봇 · 법령 출처: 법제처 OpenAPI · 인정 기능성 출처: 식약처 식품안전나라</div></footer>
+<footer><div class="wrap">식품 표시·광고 도우미 · 법령 출처: 법제처 OpenAPI · 인정 기능성 출처: 식약처 식품안전나라</div></footer>
 
 <script>
 (function () {
   var $ = function (id) { return document.getElementById(id); };
+  var all = function (sel) { return Array.prototype.slice.call(document.querySelectorAll(sel)); };
+  var SHOP = { cafe: '☕ 카페', restaurant: '🍽️ 음식점', banchan: '🥗 반찬가게', online: '📦 온라인 판매' };
   var KIND = { general: '일반식품', health: '건강기능식품' };
-  var USE = { menu: '메뉴판', page: '상세페이지', sns: 'SNS' };
+  var USE = { menu: '메뉴판·가격표', page: '상세페이지', sns: 'SNS 홍보' };
+  /* 매장은 메뉴판·SNS, 온라인은 상세페이지·SNS */
+  var USES = { cafe: ['menu', 'sns'], restaurant: ['menu', 'sns'], banchan: ['menu', 'sns'], online: ['page', 'sns'] };
   var VERDICT = { high: '위반 소지 큼', low: '위반 소지 낮음', unsure: '판단 어려움', out_of_scope: '범위 밖' };
-  var CHIPS = {
-    general: [
-      { q: 'SNS에 “면역력 강화에 좋아요”라고 올려도 되나요?', u: 'sns' },
-      { q: '상세페이지에 “다이어트 효과”라고 써도 되나요?', u: 'page' },
-      { q: '메뉴판에 “혈당 관리 샐러드”라고 써도 되나요?', u: 'menu' },
-      { q: '“천연 무첨가”라고 써도 되나요?', u: 'page' }
+  var EXAMPLES = {
+    cafe: [
+      { q: '메뉴판에 “디톡스 주스”라고 써도 되나요?', u: 'menu' },
+      { q: 'SNS에 “면역력 강화에 좋은 생강차”라고 올려도 되나요?', u: 'sns' },
+      { q: '메뉴판에 “다이어트 커피”라고 써도 되나요?', u: 'menu' }
     ],
-    health: [
+    restaurant: [
+      { q: '메뉴판에 “혈당 관리 샐러드”라고 써도 되나요?', u: 'menu' },
+      { q: 'SNS에 “먹으면 피로가 싹 풀리는 보양식”이라고 올려도 되나요?', u: 'sns' },
+      { q: '메뉴판에 “천연 무첨가”라고 써도 되나요?', u: 'menu' }
+    ],
+    banchan: [
+      { q: 'SNS에 “면역력 쑥쑥 반찬 세트”라고 올려도 되나요?', u: 'sns' },
+      { q: '메뉴판에 “먹으면 혈당 걱정 끝”이라고 써도 되나요?', u: 'menu' },
+      { q: '가격표에 “다이어트 도시락”이라고 써도 되나요?', u: 'menu' }
+    ],
+    online_general: [
+      { q: '상세페이지에 “다이어트 효과”라고 써도 되나요?', u: 'page' },
+      { q: 'SNS에 “면역력 강화에 좋아요”라고 올려도 되나요?', u: 'sns' },
+      { q: '상세페이지에 “고혈압을 치료합니다”라고 써도 되나요?', u: 'page' }
+    ],
+    online_health: [
       { q: '상세페이지에 “혈당 관리에 도움”이라고 써도 되나요?', u: 'page' },
       { q: 'SNS에 “체지방 감소에 도움을 줄 수 있음”이라고 써도 되나요?', u: 'sns' },
-      { q: '인정된 기능성 표현만 써야 하나요?', u: 'sns' },
-      { q: '“고혈압을 치료합니다”라고 써도 되나요?', u: 'page' }
+      { q: '인정된 기능성 표현만 써야 하나요?', u: 'sns' }
     ]
   };
   var SCOPE_Q = '식품 제조업 영업신고는 어떻게 하나요?';
   var TIMEOUT_MS = 200000;
+  var SUGGEST_FOR = ['high', 'unsure'];     // 추천 문구는 위반 소지 큼·판단 어려움일 때만
+  var MAX_RECENT = 3;
+  var MAX_SAVED = 30;
+  var SAVE_KEY = 'food-ad-helper.saved';
 
-  var st = { sel: null, use: null, busy: false };
+  var st = { shop: null, mark: null, use: null, busy: false };
   var log = $('log'), inp = $('q'), send = $('send');
 
   /* 답변 내용은 모두 textContent 로만 넣는다 (LLM 출력·법령 본문에 HTML이 섞여도 글자로 보이게) */
   function el(tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
-  function toBottom() { log.scrollTop = log.scrollHeight; }
-  function botBubble(text) { var m = el('div', 'msg bot'); m.appendChild(el('div', 'bubble', text)); log.appendChild(m); toBottom(); return m; }
-  function userBubble(text) { var m = el('div', 'msg user'); m.appendChild(el('div', 'bubble', text)); log.appendChild(m); toBottom(); }
 
-  function setBusy(b) {
-    st.busy = b;
-    inp.disabled = b || !st.sel;
-    send.disabled = b || !st.sel;
+  /* 서버로 보내는 식품 종류: 온라인 판매에서 건강기능식품 마크가 있다고 한 경우만 health, 나머지는 더 엄격한 general */
+  function foodKind() { return st.shop === 'online' && st.mark === 'yes' ? 'health' : 'general'; }
+  function ready() { return !!st.shop && (st.shop !== 'online' || !!st.mark); }
+
+  function check(sel, attr, value) {
+    all(sel).forEach(function (b) { b.setAttribute('aria-checked', String(b.getAttribute(attr) === value)); });
   }
 
-  function setUse(k) {
-    st.use = k;
-    Array.prototype.forEach.call(document.querySelectorAll('.useb'), function (x) {
-      x.setAttribute('aria-pressed', String(x.getAttribute('data-use') === k));
-    });
-  }
+  function setUse(k) { st.use = k; check('.useb', 'data-use', k); }
 
-  function detectUse(raw) {
-    var s = raw.replace(/\s+/g, '').toLowerCase();
-    if (/메뉴판|메뉴명|메뉴에/.test(s)) return 'menu';
-    if (/상세페이지|상세설명|쇼핑몰|스마트스토어/.test(s)) return 'page';
-    if (/sns|인스타|블로그|홍보문구|게시글|해시태그/.test(s)) return 'sns';
-    return null;
-  }
-
-  function chipsFor(k) {
-    var m = botBubble('‘' + KIND[k] + '’ 기준으로 점검할게요. 예시를 눌러 보거나 광고 문구를 직접 입력해 보세요.');
-    m.appendChild(el('span', 'chips-label', '예시 문구·질문'));
+  function renderExamples() {
+    var box = $('examples'); box.textContent = '';
+    if (!ready()) return;
+    var key = st.shop === 'online' ? 'online_' + foodKind() : st.shop;
+    box.appendChild(el('span', 'chips-label', '이런 문구를 많이 물어보세요 (누르면 바로 점검)'));
     var wrap = el('div', 'chips');
-    CHIPS[k].forEach(function (x) {
+    EXAMPLES[key].forEach(function (x) {
       var c = el('button', 'chip', x.q); c.type = 'button';
       c.addEventListener('click', function () { setUse(x.u); ask(x.q); });
       wrap.appendChild(c);
@@ -245,32 +341,128 @@ footer{margin-top:32px;border-top:1px solid var(--line);padding:20px 0 36px;font
     sc.appendChild(el('i', null, '범위 밖 예시')); sc.appendChild(document.createTextNode(SCOPE_Q));
     sc.addEventListener('click', function () { ask(SCOPE_Q); });
     wrap.appendChild(sc);
-    m.appendChild(wrap); toBottom();
+    box.appendChild(wrap);
   }
 
-  function setKind(k) {
-    var first = st.sel === null;
-    st.sel = k;
-    Array.prototype.forEach.call(document.querySelectorAll('#seg button'), function (b) {
-      b.setAttribute('aria-checked', String(b.getAttribute('data-kind') === k));
+  function refresh() {
+    var ok = ready();
+    $('step2').classList.toggle('off', !ok);
+    $('step3').classList.toggle('off', !ok);
+    var uses = st.shop ? USES[st.shop] : ['menu', 'sns'];
+    all('.useb').forEach(function (b) {
+      b.hidden = uses.indexOf(b.getAttribute('data-use')) < 0;
+      b.disabled = !ok;
     });
-    $('seg').classList.remove('empty');
-    $('kind-hint').textContent = '언제든 바꿀 수 있어요';
-    inp.placeholder = '예: ' + CHIPS[k][0].q;
-    $('hint').textContent = '선택한 식품 종류: ' + KIND[k];
-    setBusy(st.busy);
-    if (first) { chipsFor(k); inp.focus(); }
-    else { log.appendChild(el('div', 'divider', '식품 종류를 ‘' + KIND[k] + '’(으)로 바꿨어요')); toBottom(); }
+    inp.disabled = !ok || st.busy;
+    send.disabled = !ok || st.busy;
+    all('#examples .chip').forEach(function (c) { c.disabled = st.busy; });
+    if (!st.shop) {
+      inp.placeholder = '먼저 1단계에서 가게를 골라 주세요';
+      $('hint').textContent = '가게를 고르면 문구를 입력할 수 있어요.';
+    } else if (!ok) {
+      inp.placeholder = '먼저 건강기능식품 마크가 있는지 골라 주세요';
+      $('hint').textContent = '마크가 있는지 고르면 문구를 입력할 수 있어요.';
+    } else {
+      inp.placeholder = '여기에 문구를 붙여 넣으세요';
+      $('hint').textContent = SHOP[st.shop] + ' · ' + KIND[foodKind()] + ' 기준으로 점검해요' + (st.use ? '' : ' (2단계에서 쓸 곳을 고르면 더 정확해요)');
+    }
   }
 
-  function renderAnswer(a, sel, use, q) {
-    var m = el('div', 'msg bot');
+  function setShop(k) {
+    st.shop = k;
+    check('#step1 .tiles:not(.small) .tile', 'data-shop', k);
+    $('mark-row').hidden = k !== 'online';
+    if (st.use && USES[k].indexOf(st.use) < 0) setUse(null);
+    renderExamples(); refresh();
+  }
+
+  function setMark(k) {
+    st.mark = k;
+    check('#mark-row .tile', 'data-mark', k);
+    $('mark-hint').hidden = k !== 'unsure';
+    renderExamples(); refresh();
+  }
+
+  function detectUse(raw) {
+    var s = raw.replace(/\s+/g, '').toLowerCase();
+    if (/메뉴판|메뉴명|메뉴에|가격표/.test(s)) return 'menu';
+    if (/상세페이지|상세설명|쇼핑몰|스마트스토어/.test(s)) return 'page';
+    if (/sns|인스타|블로그|홍보문구|게시글|해시태그/.test(s)) return 'sns';
+    return null;
+  }
+
+  /* 새 결과는 입력창 바로 아래(맨 위)에 넣고, 이전 결과는 아래로 밀린다 */
+  /* 화면에는 최근 MAX_RECENT개만 남기고 오래된 결과는 지운다 (계속 남길 결과는 ⭐ 저장) */
+  function addTop(node) {
+    log.insertBefore(node, log.firstChild);
+    while (log.children.length > MAX_RECENT) log.removeChild(log.lastChild);
+    node.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  }
+
+  /* 저장한 결과: 이 브라우저의 localStorage 에만 둔다. 막혀 있거나 실패해도 화면은 그대로 동작 */
+  function loadSaved() {
+    try { var v = JSON.parse(localStorage.getItem(SAVE_KEY) || '[]'); return Array.isArray(v) ? v : []; }
+    catch (e) { return []; }
+  }
+  function writeSaved(list) {
+    try { localStorage.setItem(SAVE_KEY, JSON.stringify(list)); return true; }
+    catch (e) { return false; }
+  }
+
+  function saveResult(a, ctx) {
+    var list = loadSaved();
+    list.unshift({ id: Date.now() + '-' + Math.random().toString(36).slice(2, 7), savedAt: new Date().toISOString(), a: a, ctx: ctx });
+    if (list.length > MAX_SAVED) list.length = MAX_SAVED;
+    var ok = writeSaved(list);
+    renderSaved();
+    return ok;
+  }
+
+  function removeSaved(id) {
+    writeSaved(loadSaved().filter(function (x) { return x.id !== id; }));
+    renderSaved();
+  }
+
+  function fmtShort(iso) { var d = new Date(iso); return isNaN(d) ? '' : (d.getMonth() + 1) + '/' + d.getDate(); }
+
+  function renderSaved() {
+    var list = loadSaved(), ul = $('saved-list');
+    $('saved-count').textContent = list.length;
+    ul.textContent = '';
+    if (!list.length) { ul.appendChild(el('li', 'saved-empty', '아직 저장한 결과가 없어요. 결과 카드의 ⭐ 저장 버튼을 눌러 보세요.')); return; }
+    list.forEach(function (x) {
+      var li = el('li', 'saved-item');
+      var row = el('div', 'saved-row');
+      var open = el('button', 'saved-open'); open.type = 'button'; open.setAttribute('aria-expanded', 'false');
+      open.appendChild(el('span', 'v v-' + x.a.verdict, VERDICT[x.a.verdict] || x.a.verdict));
+      open.appendChild(el('span', 'saved-q', x.ctx.q));
+      open.appendChild(el('span', 'saved-date', fmtShort(x.savedAt)));
+      var del = el('button', 'saved-del', '삭제'); del.type = 'button';
+      del.setAttribute('aria-label', '저장한 결과 삭제: ' + x.ctx.q);
+      del.addEventListener('click', function () { removeSaved(x.id); });
+      var holder = el('div', 'saved-card'); holder.hidden = true;
+      open.addEventListener('click', function () {
+        if (!holder.firstChild) holder.appendChild(renderAnswer(x.a, x.ctx, { saved: true }));
+        holder.hidden = !holder.hidden;
+        open.setAttribute('aria-expanded', String(!holder.hidden));
+      });
+      row.appendChild(open); row.appendChild(del);
+      li.appendChild(row); li.appendChild(holder);
+      ul.appendChild(li);
+    });
+  }
+
+  function renderAnswer(a, ctx, opts) {
+    opts = opts || {};
     var box = el('article', 'ans');
+    var q = el('p', 'ans-q'); q.appendChild(document.createTextNode('점검한 문구: ')); q.appendChild(el('b', null, ctx.q));
+    box.appendChild(q);
     var head = el('div', 'ans-head');
     head.appendChild(el('span', 'v v-' + a.verdict, VERDICT[a.verdict] || a.verdict));
     if (a.verdict !== 'out_of_scope') {
-      head.appendChild(el('span', 'tag', KIND[sel]));
-      if (use) head.appendChild(el('span', 'tag', USE[use]));
+      head.appendChild(el('span', 'tag', SHOP[ctx.shop]));
+      head.appendChild(el('span', 'tag', KIND[ctx.kind]));
+      if (ctx.use) head.appendChild(el('span', 'tag', USE[ctx.use]));
     }
     box.appendChild(head);
     if (a.verdict_reason) box.appendChild(el('p', 'concl', a.verdict_reason));
@@ -278,44 +470,86 @@ footer{margin-top:32px;border-top:1px solid var(--line);padding:20px 0 36px;font
 
     if (a.actions && a.actions.length) {
       var outScope = a.verdict === 'out_of_scope';
-      box.appendChild(el('h4', null, outScope ? '안내' : '해야 할 일'));
+      box.appendChild(el('h4', null, outScope ? '안내' : '이렇게 하세요'));
       var list = el(outScope ? 'ul' : 'ol');
       a.actions.forEach(function (s) { list.appendChild(el('li', null, s)); });
       box.appendChild(list);
     }
 
+    /* 근거는 접어 두고, 누르면 펼친다. 항목마다 어디서 나온 자료인지 출처를 함께 적는다 */
     if (a.basis && a.basis.length) {
-      box.appendChild(el('h4', null, '근거'));
+      var laws = a.basis.filter(function (b) { return b.type === 'law'; }).length;
+      var mats = a.basis.length - laws;
+      var det = el('details', 'basis-box');
+      var parts = [];
+      if (laws) parts.push('법령 ' + laws + '개');
+      if (mats) parts.push('식약처 인정 ' + mats + '개');
+      det.appendChild(el('summary', null, '근거 보기 (' + parts.join(' · ') + ')'));
       var ul = el('ul', 'basis');
       a.basis.forEach(function (b) {
-        var li = el('li'), d = el('div');
+        var li = el('li');
         if (b.type === 'law') {
-          li.appendChild(el('span', 'art', b.article));
-          d.appendChild(el('b', null, b.law_name));
+          li.appendChild(el('span', 'src src-law', '법령'));
+          li.appendChild(el('b', null, b.law_name + ' ' + b.article + (b.title ? ' (' + b.title + ')' : '')));
+          if (b.summary) li.appendChild(el('p', 'why', b.summary));
+          li.appendChild(el('small', null, '출처: 법제처 국가법령정보' + (b.effective_date ? ' · 시행일 ' + fmtDate(b.effective_date) : '')));
+          if (b.content) {
+            var raw = el('details', 'raw-law');
+            raw.appendChild(el('summary', null, '조문 원문 보기'));
+            raw.appendChild(el('p', null, b.content));
+            li.appendChild(raw);
+          }
         } else {
-          li.appendChild(el('span', 'art', '제' + b.recog_no + '호'));
-          d.appendChild(el('b', null, b.material));
-          d.appendChild(document.createTextNode(' · 인정 문구: ' + b.claim));
+          li.appendChild(el('span', 'src src-mat', '식약처 인정 기능성'));
+          li.appendChild(el('b', null, b.material));
+          li.appendChild(el('p', null, '인정된 문구: “' + b.claim + '”'));
+          if (b.summary) li.appendChild(el('p', null, b.summary));
+          li.appendChild(el('small', null, '출처: 식품의약품안전처 식품안전나라 · 건강기능식품 기능성 원료 인정 제' + b.recog_no + '호'));
         }
-        if (b.summary) d.appendChild(document.createTextNode(' · ' + b.summary));
-        li.appendChild(d); ul.appendChild(li);
+        ul.appendChild(li);
       });
-      box.appendChild(ul);
+      det.appendChild(ul);
+      box.appendChild(det);
     }
 
+    /* 문구가 고른 기준과 맞지 않으면, 다른 기준으로 한 번 더 점검하는 버튼 (가게 선택은 그대로 둔다) */
     if (a.food_type_mismatch) {
-      var other = sel === 'general' ? 'health' : 'general';
-      var act = el('button', 'act', '‘' + KIND[other] + '’으로 바꾸고 다시 점검'); act.type = 'button';
+      var other = ctx.kind === 'general' ? 'health' : 'general';
+      var act = el('button', 'act', KIND[other] + ' 기준으로 다시 점검'); act.type = 'button';
       act.addEventListener('click', function () {
         if (st.busy) return;
-        setKind(other); userBubble(q); reply(q);
+        reply({ q: ctx.q, shop: ctx.shop, kind: other, use: ctx.use });
       });
       box.appendChild(act);
     }
 
+    /* 추천 문구: 받은 추천은 a.suggestion 에 두어, ⭐ 저장할 때 같이 저장되고 저장한 결과에서도 보인다 */
+    var sugBox = el('div'); sugBox.hidden = !a.suggestion;
+    if (a.suggestion) sugBox.appendChild(renderSuggestion(a.suggestion));
+    box.appendChild(sugBox);
+
+    var btns = el('div', 'ans-btns');
+    if (!opts.saved && !a.suggestion && !a.raw_fallback && SUGGEST_FOR.indexOf(a.verdict) >= 0) {
+      var sg = el('button', 'sug-btn', '✏️ 추천 문구 보기'); sg.type = 'button';
+      sg.addEventListener('click', function () { requestSuggestion(a, ctx, sugBox, sg); });
+      btns.appendChild(sg);
+    }
+    if (!opts.saved) {
+      var sv = el('button', 'save-btn', '⭐ 이 결과 저장'); sv.type = 'button';
+      sv.addEventListener('click', function () {
+        var ok = saveResult(a, ctx);
+        sv.disabled = true;
+        sv.textContent = ok ? '✓ 저장했어요 · ‘저장한 결과’에서 볼 수 있어요' : '이 브라우저에서는 저장할 수 없어요';
+      });
+      btns.appendChild(sv);
+    }
+    if (btns.firstChild) box.appendChild(btns);
+
     box.appendChild(el('p', 'foot', '수집 기준일 ' + (a.collected_at || '-') + ' · ' + a.disclaimer));
-    m.appendChild(box); log.appendChild(m); toBottom();
+    return box;
   }
+
+  function fmtDate(d) { d = String(d); return /^\d{8}$/.test(d) ? d.slice(0, 4) + '.' + d.slice(4, 6) + '.' + d.slice(6) : d; }
 
   function errorText(body, status) {
     var d = body && body.detail;
@@ -324,18 +558,18 @@ footer{margin-top:32px;border-top:1px solid var(--line);padding:20px 0 36px;font
     return 'HTTP ' + status;
   }
 
-  function reply(q) {
-    var sel = st.sel, use = st.use;
-    var m = el('div', 'msg bot'); var t = el('div', 'bubble typing'); t.setAttribute('aria-label', '점검 중');
-    t.appendChild(el('i')); t.appendChild(el('i')); t.appendChild(el('i')); m.appendChild(t);
-    log.appendChild(m); toBottom();
-    setBusy(true);
+  function setBusy(b) { st.busy = b; refresh(); }
+
+  function failText(e) { return e.name === 'AbortError' ? '응답 시간이 초과됐어요' : e.message; }
+
+  /* 점검·추천 공통 요청: 시간이 지나면 끊고, 오류면 서버가 보낸 설명으로 실패 */
+  function postApi(path, ctx) {
     var ctrl = new AbortController();
     var timer = setTimeout(function () { ctrl.abort(); }, TIMEOUT_MS);
-    fetch('/rag/query', {
+    return fetch(path, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ query: q, food_type: sel, usage: use }),
+      body: JSON.stringify({ query: ctx.q, food_type: ctx.kind, usage: ctx.use }),
       signal: ctrl.signal
     })
       .then(function (r) {
@@ -346,39 +580,106 @@ footer{margin-top:32px;border-top:1px solid var(--line);padding:20px 0 36px;font
           return body;
         });
       })
-      .then(function (a) { m.remove(); renderAnswer(a, sel, use, q); })
+      .finally(function () { clearTimeout(timer); });
+  }
+
+  function reply(ctx) {
+    var t = el('div', 'bubble typing'); t.setAttribute('aria-label', '점검 중');
+    t.appendChild(el('i')); t.appendChild(el('i')); t.appendChild(el('i')); t.appendChild(el('span', null, '점검하고 있어요…'));
+    addTop(t);
+    setBusy(true);
+    postApi('/rag/query', ctx)
+      .then(function (a) { log.replaceChild(renderAnswer(a, ctx), t); })
       .catch(function (e) {
-        m.remove();
-        botBubble('답변을 받지 못했어요. 잠시 후 다시 시도해 주세요. (' + (e.name === 'AbortError' ? '응답 시간이 초과됐어요' : e.message) + ')');
+        log.replaceChild(el('div', 'bubble', '답변을 받지 못했어요. 잠시 후 다시 시도해 주세요. (' + failText(e) + ')'), t);
       })
-      .finally(function () { clearTimeout(timer); setBusy(false); inp.focus(); });
+      .finally(function () { setBusy(false); });
+  }
+
+  /* 추천 문구: 서버가 고쳐 쓰고 다시 점검해서 '낮음'이 나온 문구 1개만 보내 준다 (보통 5초 안팎) */
+  function requestSuggestion(a, ctx, holder, btn) {
+    if (st.busy) return;
+    btn.disabled = true;
+    holder.hidden = false;
+    holder.textContent = '';
+    var w = el('div', 'sug wait'); w.setAttribute('role', 'status');
+    w.appendChild(el('h5', null, '고친 문구를 만들고 다시 점검하고 있어요…'));
+    var bar = el('div', 'sug-bar'); bar.appendChild(el('i')); w.appendChild(bar);
+    w.appendChild(el('p', null, '안전한지 한 번 더 확인하느라 5초쯤 걸려요.'));
+    holder.appendChild(w);
+    setBusy(true);
+    postApi('/rag/suggest', ctx)
+      .then(function (s) {
+        holder.textContent = '';
+        btn.parentNode.removeChild(btn);       // 같은 문구는 다시 눌러도 같은 결과라 버튼을 없앤다
+        if (s.success) {
+          a.suggestion = s;
+          holder.appendChild(renderSuggestion(s));
+          return;
+        }
+        var f = el('div', 'sug fail');
+        f.appendChild(el('h5', null, '안전한 문구를 자동으로 만들지 못했어요'));
+        f.appendChild(el('p', null, '효능·효과(피로 회복, 면역, 다이어트 등) 대신 원료, 맛, 만드는 방법, 가게 분위기를 포함하여 문구를 다시 점검해보세요.'));
+        holder.appendChild(f);
+      })
+      .catch(function (e) {
+        holder.textContent = '';
+        holder.appendChild(el('div', 'sug fail', '추천 문구를 받지 못했어요. 잠시 후 다시 눌러 주세요. (' + failText(e) + ')'));
+        btn.disabled = false;
+      })
+      .finally(function () { setBusy(false); });
+  }
+
+  function renderSuggestion(s) {
+    var p = el('div', 'sug');
+    p.appendChild(el('h5', null, '✏️ 이렇게 수정해 보세요'));
+    p.appendChild(el('p', 'sug-phrase', s.phrase));
+    p.appendChild(el('span', 'v v-low', '다시 점검: 위반 소지 낮음'));
+    if (s.change) p.appendChild(el('p', null, s.change));
+    var cp = el('button', 'copy-btn', '📋 문구 복사'); cp.type = 'button';
+    cp.addEventListener('click', function () {
+      copyText(s.phrase).then(
+        function () { cp.textContent = '✓ 복사했어요'; },
+        function () { cp.textContent = '복사하지 못했어요. 문구를 길게 눌러 복사해 주세요'; });
+    });
+    p.appendChild(cp);
+    return p;
+  }
+
+  /* 휴대폰에서 http://PC주소:5000 으로 열면 clipboard API가 막혀 있어서, 그때는 예전 방식으로 복사한다 */
+  function copyText(text) {
+    if (navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(text);
+    return new Promise(function (ok, fail) {
+      var ta = el('textarea'); ta.value = text; ta.setAttribute('readonly', '');
+      ta.style.position = 'fixed'; ta.style.opacity = '0';
+      document.body.appendChild(ta); ta.select();
+      var done = false;
+      try { done = document.execCommand('copy'); } catch (e) { done = false; }
+      document.body.removeChild(ta);
+      if (done) ok(); else fail();
+    });
   }
 
   function ask(q) {
     q = (q || '').trim();
-    if (!q || !st.sel || st.busy) return;
-    var d = detectUse(q); if (d) setUse(d);
-    userBubble(q); reply(q);
+    if (!q || !ready() || st.busy) return;
+    var d = detectUse(q); if (d && USES[st.shop].indexOf(d) >= 0) setUse(d);
+    reply({ q: q, shop: st.shop, kind: foodKind(), use: st.use });
   }
 
-  Array.prototype.forEach.call(document.querySelectorAll('#seg button'), function (b) {
-    b.addEventListener('click', function () {
-      var k = b.getAttribute('data-kind');
-      if (k !== st.sel && !st.busy) setKind(k);
-    });
+  all('#step1 .tiles:not(.small) .tile').forEach(function (b) {
+    b.addEventListener('click', function () { if (!st.busy) setShop(b.getAttribute('data-shop')); });
   });
-  Array.prototype.forEach.call(document.querySelectorAll('.useb'), function (x) {
-    x.addEventListener('click', function () { var k = x.getAttribute('data-use'); setUse(st.use === k ? null : k); });
+  all('#mark-row .tile').forEach(function (b) {
+    b.addEventListener('click', function () { if (!st.busy) setMark(b.getAttribute('data-mark')); });
+  });
+  all('.useb').forEach(function (b) {
+    b.addEventListener('click', function () { var k = b.getAttribute('data-use'); setUse(st.use === k ? null : k); refresh(); });
   });
   $('form').addEventListener('submit', function (e) { e.preventDefault(); var v = inp.value; inp.value = ''; ask(v); });
-
-  function intro() {
-    log.innerHTML = '';
-    botBubble('안녕하세요. 카페·음식점·반찬가게, 온라인 식품 판매자의 메뉴판·상세페이지·SNS 문구가 부당한 표시·광고에 해당할 수 있는지 법령 근거와 함께 안내해 드려요. 먼저 위에서 식품 종류를 선택해 주세요.');
-    if (st.sel) chipsFor(st.sel);
-  }
-  $('clear').addEventListener('click', function () { if (!st.busy) intro(); });
-  intro();
+  $('clear').addEventListener('click', function () { if (!st.busy) log.innerHTML = ''; });
+  refresh();
+  renderSaved();
 })();
 </script>
 </body>

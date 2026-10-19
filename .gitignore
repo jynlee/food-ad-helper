@@ -7,3 +7,4 @@ venv/
 .vscode/
 logs/
 .pytest_cache/
+.superpowers/

@@ -22,9 +22,10 @@ def calls(monkeypatch):
         log["materials"] += 1
         return [dict(MAT_HIT)]
 
-    def fakeLlm(cfg, prompt):
+    def fakeLlm(cfg, prompt, stop=None):
         log["llm"].append(prompt)
-        return LLM_OUT
+        log.setdefault("stops", []).append(stop)
+        return log["outs"].pop(0) if log.get("outs") else LLM_OUT
 
     monkeypatch.setattr(rag_pipeline, "searchLaw", fakeLaw)
     monkeypatch.setattr(rag_pipeline, "searchMaterials", fakeMat)
@@ -78,3 +79,47 @@ def test_generateAnswer_turns_off_thinking_and_keeps_model_loaded(monkeypatch):
     assert sent["think"] is False
     assert sent["keep_alive"] == "30m"
     assert sent["options"]["temperature"] == 0.1
+    # 같은 문구는 언제 점검해도 같은 판단이 나오게 seed를 고정한다 (추천 문구의 '다시 점검' 표시가 사실이 되도록)
+    assert sent["options"]["seed"] == 42 and "stop" not in sent["options"]
+
+
+def test_generateAnswer_can_stop_early(monkeypatch):
+    sent = {}
+
+    class FakeResp:
+        def raise_for_status(self):
+            pass
+
+        def json(self):
+            return {"response": "[판단] 낮음\n"}
+
+    def fakePost(url, json=None, timeout=None):
+        sent.update(json)
+        return FakeResp()
+
+    monkeypatch.setattr(rag_pipeline.requests, "post", fakePost)
+    rag_pipeline.generateAnswer({"ollamaHost": "http://x", "llmModel": "m"}, "p", stop=["[판단이유]"])
+    assert sent["options"]["stop"] == ["[판단이유]"]
+
+
+def test_quick_check_uses_same_prompt_and_stops_after_verdict(calls):
+    calls["outs"] = ["[판단] 낮음\n"]
+    got = rag_pipeline.quickCheck(None, {}, "따뜻한 홍삼차 한 잔", "general", usage="sns")
+    assert got == {"verdict": "low", "verdict_reason": ""}
+    assert calls["stops"] == [["[판단이유]"]]
+    # 일반 점검과 같은 프롬프트여야 seed 고정으로 같은 판단이 나온다
+    rag_pipeline.runFoodRag(None, {}, "따뜻한 홍삼차 한 잔", "general", usage="sns")
+    assert calls["llm"][0] == calls["llm"][1]
+
+
+def test_quick_check_gets_reason_only_when_not_low(calls):
+    calls["outs"] = ["[판단] 어려움\n", "[판단] 어려움\n[판단이유] 근거 자료가 필요해요.\n"]
+    got = rag_pipeline.quickCheck(None, {}, "최고의 홍삼차", "general")
+    assert got == {"verdict": "unsure", "verdict_reason": "근거 자료가 필요해요."}
+    assert calls["stops"] == [["[판단이유]"], ["[해야할일]"]]
+
+
+def test_quick_check_without_hits_is_out_of_scope(monkeypatch, calls):
+    monkeypatch.setattr(rag_pipeline, "searchLaw", lambda *a, **k: [])
+    assert rag_pipeline.quickCheck(None, {}, "아무 말", "general")["verdict"] == "out_of_scope"
+    assert calls["llm"] == []
