@@ -112,8 +112,7 @@ flowchart LR
 ## 문서
 
 - 개요: [docs/식품 표시·광고 점검 도우미 개요서.md](docs/식품%20표시·광고%20점검%20도우미%20개요서.md)
-- 설계: `docs/superpowers/specs/2026-10-15-food-ad-helper-design.md`
-- 구현 계획: `docs/superpowers/plans/2026-10-15-food-ad-helper.md`
+- 설계: [docs/design/2026-10-15-food-ad-helper-design.md](docs/design/2026-10-15-food-ad-helper-design.md)
 
 ## 폴더
 

@@ -8,3 +8,4 @@ venv/
 logs/
 .pytest_cache/
 .superpowers/
+docs/local/
