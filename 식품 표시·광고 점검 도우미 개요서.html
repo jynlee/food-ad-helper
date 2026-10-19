@@ -1,0 +1,1067 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>식품 표시·광고 도우미 개요서</title>
+<style>
+  :root {
+    --bg: #f7f6f2;
+    --paper: #ffffff;
+    --ink: #1f2328;
+    --muted: #5d636b;
+    --line: #e2e0d8;
+    --accent: #2f6b4f;
+    --accent-soft: #e6f0ea;
+    --warn: #9a5b13;
+    --warn-soft: #fbf1e3;
+    --new: #3b5bab;
+    --new-soft: #e8edf8;
+    --quote: #f2f1ec;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #16181b;
+      --paper: #1e2125;
+      --ink: #e7e9ec;
+      --muted: #a2a8b0;
+      --line: #33373d;
+      --accent: #7cc3a0;
+      --accent-soft: #1f3329;
+      --warn: #e2a85d;
+      --warn-soft: #362a1a;
+      --new: #93abe8;
+      --new-soft: #222b40;
+      --quote: #25282d;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #16181b; --paper: #1e2125; --ink: #e7e9ec; --muted: #a2a8b0; --line: #33373d;
+    --accent: #7cc3a0; --accent-soft: #1f3329; --warn: #e2a85d; --warn-soft: #362a1a;
+    --new: #93abe8; --new-soft: #222b40; --quote: #25282d;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+    font-size: 16px;
+    line-height: 1.75;
+    word-break: keep-all;
+    overflow-wrap: break-word;
+  }
+  .wrap { max-width: 920px; margin: 0 auto; padding: 48px 16px 80px; }
+  header.doc { margin-bottom: 32px; }
+  header.doc h1 { font-size: 2rem; line-height: 1.3; margin: 0 0 8px; letter-spacing: -0.02em; }
+  header.doc .meta { color: var(--muted); font-size: 0.92rem; }
+  nav.toc {
+    background: var(--paper); border: 1px solid var(--line); border-radius: 12px;
+    padding: 16px 20px; margin-bottom: 32px;
+  }
+  nav.toc ol { margin: 0; padding-left: 0; list-style: none; display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 4px 16px; }
+  nav.toc a { color: var(--ink); text-decoration: none; font-size: 0.95rem; }
+  nav.toc a:hover { color: var(--accent); }
+  nav.toc .n { color: var(--accent); font-weight: 700; margin-right: 6px; font-variant-numeric: tabular-nums; }
+  section {
+    background: var(--paper); border: 1px solid var(--line); border-radius: 14px;
+    padding: 28px 28px 20px; margin-bottom: 24px;
+  }
+  section > h2 { font-size: 1.4rem; margin: 0 0 16px; letter-spacing: -0.01em; display: flex; gap: 10px; align-items: baseline; }
+  section > h2 .n { color: var(--accent); font-variant-numeric: tabular-nums; }
+  .lead {
+    border-left: 4px solid var(--accent); background: var(--accent-soft);
+    padding: 12px 16px; border-radius: 0 8px 8px 0; font-weight: 600; margin: 0 0 18px;
+  }
+  h3 { font-size: 1.05rem; margin: 26px 0 10px; }
+  p { margin: 0 0 14px; }
+  ul, ol { margin: 0 0 14px; padding-left: 1.4em; }
+  li { margin-bottom: 4px; }
+  .table-wrap { overflow-x: auto; margin: 0 0 18px; border: 1px solid var(--line); border-radius: 10px; }
+  table { border-collapse: collapse; width: 100%; font-size: 0.93rem; line-height: 1.6; }
+  th, td { padding: 9px 12px; text-align: left; vertical-align: top; border-bottom: 1px solid var(--line); }
+  tr:last-child td { border-bottom: 0; }
+  th { background: var(--quote); font-weight: 700; white-space: nowrap; }
+  td:first-child { font-weight: 600; }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+  code { font-family: ui-monospace, "Cascadia Code", Consolas, monospace; font-size: 0.88em; background: var(--quote); padding: 1px 5px; border-radius: 4px; }
+  .example {
+    background: var(--quote); border-radius: 10px; padding: 16px 20px; margin: 0 0 18px;
+  }
+  .example p { margin-bottom: 8px; }
+  .example p:last-child { margin-bottom: 0; color: var(--muted); font-size: 0.92rem; }
+  .example .tag { display: inline-block; min-width: 4.5em; font-weight: 700; color: var(--accent); }
+  .caption { color: var(--muted); font-size: 0.9rem; }
+  .badge { display: inline-block; font-size: 0.82rem; font-weight: 700; padding: 1px 8px; border-radius: 999px; white-space: nowrap; }
+  .ok { background: var(--accent-soft); color: var(--accent); }
+  .no { background: var(--warn-soft); color: var(--warn); }
+  .todo { background: var(--quote); color: var(--muted); }
+  tr.pivot td { background: var(--warn-soft); }
+
+  /* 시스템 구조 다이어그램 */
+  .diagram { border: 1px solid var(--line); border-radius: 12px; padding: 18px; margin: 0 0 14px; }
+  .lane-title { font-weight: 700; font-size: 0.9rem; color: var(--muted); margin: 0 0 10px; }
+  .lane-title + .flow { margin-bottom: 20px; }
+  .flow { display: flex; align-items: stretch; gap: 0; flex-wrap: wrap; row-gap: 10px; }
+  .box {
+    flex: 1 1 140px; border: 1.5px solid var(--line); border-radius: 10px;
+    padding: 10px 12px; font-size: 0.88rem; line-height: 1.5; background: var(--paper);
+  }
+  .box b { display: block; font-size: 0.93rem; margin-bottom: 2px; }
+  .box.reuse { background: var(--accent-soft); border-color: var(--accent); }
+  .box.newly { background: var(--new-soft); border-color: var(--new); border-style: dashed; }
+  .arrow { flex: 0 0 22px; display: flex; align-items: center; justify-content: center; color: var(--muted); font-weight: 700; }
+  .notice {
+    margin-top: 6px; border: 1.5px solid var(--warn); background: var(--warn-soft); color: var(--ink);
+    border-radius: 10px; padding: 10px 14px; font-size: 0.88rem;
+  }
+  .notice b { color: var(--warn); }
+  .legend { display: flex; gap: 16px; flex-wrap: wrap; font-size: 0.85rem; color: var(--muted); margin-top: 14px; }
+  .legend span::before { content: ""; display: inline-block; width: 14px; height: 14px; border-radius: 4px; vertical-align: -2px; margin-right: 6px; border: 1.5px solid var(--line); }
+  .legend .l-reuse::before { background: var(--accent-soft); border-color: var(--accent); }
+  .legend .l-new::before { background: var(--new-soft); border-color: var(--new); border-style: dashed; }
+  .legend .l-plain::before { background: var(--paper); }
+
+  @media (max-width: 640px) {
+    .wrap { padding-top: 28px; }
+    header.doc h1 { font-size: 1.55rem; }
+    section { padding: 20px 16px 12px; }
+    .flow { flex-direction: column; }
+    .arrow { flex-basis: 18px; transform: rotate(90deg); }
+    .box { flex-basis: auto; }
+  }
+  @media print {
+    body { background: #fff; font-size: 11pt; }
+    .wrap { max-width: none; padding: 0; }
+    nav.toc { display: none; }
+    section { border: 0; padding: 0; margin-bottom: 18pt; break-inside: auto; }
+    .table-wrap { overflow: visible; }
+    tr, .box, .example { break-inside: avoid; }
+  }
+
+  /* ===== Part B 스터디 노트 (09~13) ===== */
+  .part { margin: 40px 0 24px; padding: 18px 22px; border: 2px solid var(--accent); border-radius: 14px; background: var(--accent-soft); }
+  .part h2 { margin: 0 0 6px; font-size: 1.35rem; }
+  .part p { margin: 0; font-size: 0.95rem; }
+  .keybox { border-left: 4px solid var(--new); background: var(--new-soft); padding: 10px 16px; border-radius: 0 8px 8px 0; margin: 0 0 16px; font-size: 0.93rem; }
+  .keybox .t { display: block; font-weight: 700; color: var(--new); margin-bottom: 2px; }
+  .keybox ul, .keybox ol { margin: 4px 0 0; }
+  .selfcheck { border: 1.5px dashed var(--line); border-radius: 10px; padding: 4px 18px 8px; margin: 18px 0 8px; }
+  .selfcheck h3 { margin-top: 12px; }
+  .selfcheck li { margin-bottom: 8px; }
+  .ans { display: block; color: var(--muted); font-size: 0.88rem; }
+  pre.cmd { background: var(--quote); border-radius: 8px; padding: 10px 14px; margin: 6px 0 12px; font-family: ui-monospace, "Cascadia Code", Consolas, monospace; font-size: 0.84rem; line-height: 1.55; white-space: pre-wrap; overflow-wrap: anywhere; word-break: break-all; }
+  pre.tree { background: var(--quote); border-radius: 8px; padding: 12px 16px; margin: 8px 0 14px; font-family: ui-monospace, "Cascadia Code", Consolas, monospace; font-size: 0.82rem; line-height: 1.6; white-space: pre-wrap; overflow-wrap: anywhere; }
+  ol.steps { list-style: none; padding: 0; margin: 0 0 14px; counter-reset: st; }
+  ol.steps > li { counter-increment: st; position: relative; padding: 4px 0 10px 40px; margin: 0; }
+  ol.steps > li::before { content: counter(st); position: absolute; left: 0; top: 4px; width: 26px; height: 26px; border-radius: 50%; background: var(--accent); color: #fff; font-weight: 700; font-size: 0.85rem; display: grid; place-items: center; }
+  ol.steps > li > b:first-child { display: block; font-size: 1.0rem; margin-bottom: 2px; }
+  ol.steps p { margin: 0 0 6px; font-size: 0.93rem; }
+  ul.todo-list { list-style: none; padding-left: 0; }
+  ul.todo-list > li { padding: 8px 0 8px 30px; position: relative; border-bottom: 1px solid var(--line); margin: 0; }
+  ul.todo-list > li:last-child { border-bottom: 0; }
+  ul.todo-list > li::before { content: "☐"; position: absolute; left: 4px; top: 6px; font-size: 1.15rem; line-height: 1.4; }
+  ul.todo-list > li.done::before { content: "☑"; color: var(--accent); }
+  .tag-me { display: inline-block; font-size: 0.78rem; font-weight: 700; padding: 0 7px; border-radius: 4px; border: 1px solid var(--warn); color: var(--warn); margin-left: 6px; white-space: nowrap; }
+  .small { font-size: 0.88rem; color: var(--muted); }
+  @media print {
+    :root, :root:not([data-theme="light"]), :root[data-theme="dark"] {
+      --bg: #ffffff; --paper: #ffffff; --ink: #1f2328; --muted: #4a5058; --line: #cfcdc4; --accent: #2f6b4f; --accent-soft: #e6f0ea;
+      --warn: #9a5b13; --warn-soft: #fbf1e3; --new: #3b5bab; --new-soft: #e8edf8; --quote: #f2f1ec;
+    }
+    * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .part { break-before: page; }
+    h3 { break-after: avoid; }
+    pre.cmd, pre.tree, .diagram, .keybox, .selfcheck, ol.steps > li, ul.todo-list > li { break-inside: avoid; }
+    details > summary { list-style: none; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="doc">
+  <h1>식품 표시·광고 도우미 개요서</h1>
+  <div class="meta">2026년 10월 15일 · @juyeon · 스터디 노트(09~13) 추가 2026년 10월 17일</div>
+</header>
+
+<nav class="toc" aria-label="목차">
+  <ol>
+    <li><a href="#s01"><span class="n">01</span>한 줄 정의와 쉬운 설명</a></li>
+    <li><a href="#s02"><span class="n">02</span>범위</a></li>
+    <li><a href="#s03"><span class="n">03</span>법령 수집 체크리스트</a></li>
+    <li><a href="#s04"><span class="n">04</span>시스템 구조</a></li>
+    <li><a href="#s05"><span class="n">05</span>질문·답변 설계</a></li>
+    <li><a href="#s06"><span class="n">06</span>평가 계획</a></li>
+    <li><a href="#s07"><span class="n">07</span>4일 일정과 역할 분담</a></li>
+    <li><a href="#s08"><span class="n">08</span>위험 요소와 착수 전 확인</a></li>
+    <li><a href="#s09"><span class="n">09</span>전체 흐름</a></li>
+    <li><a href="#s10"><span class="n">10</span>청킹과 인덱싱 방식</a></li>
+    <li><a href="#s11"><span class="n">11</span>요구사항과 폴더 구조</a></li>
+    <li><a href="#s12"><span class="n">12</span>시작 가이드 (혼자)</a></li>
+    <li><a href="#s13"><span class="n">13</span>앞으로 할 일</a></li>
+  </ol>
+</nav>
+
+<!-- 01 -->
+<section id="s01">
+  <h2><span class="n">01</span>한 줄 정의와 쉬운 설명</h2>
+  <p class="lead">카페·음식점·반찬가게 운영자와 온라인 식품 판매자가 메뉴판, 상세페이지, SNS 홍보 문구를 입력하면, 그 문구가 법에 걸릴 수 있는지를 근거 조문과 함께 점검해 주는 소상공인을 위한 RAG 기반 식품 표시·광고 도우미입니다.</p>
+  <p>소상공인인 카페·음식점·반찬가게 운영자와 온라인 식품 판매자는 메뉴판, 상세페이지, SNS 홍보 문구를 쓸 때 “면역력 강화”, “다이어트 효과”, “혈당 관리” 같은 표현이 위법인지 판단하기 어렵습니다. 식품표시광고법, 식품위생법, 건강기능식품법에 기준이 흩어져 있고, 일반식품과 건강기능식품에 허용되는 표현도 서로 다르기 때문입니다.</p>
+  <p>이 프로젝트는 소상공인을 위해 법제처의 법령·행정규칙과 식약처 식품안전나라의 기능성 인정 문구를 기반으로, 광고 문구의 위반 가능성을 근거 조문과 함께 점검해 줍니다.</p>
+
+  <div class="table-wrap"><table>
+    <thead><tr><th>구분</th><th>내용</th></tr></thead>
+    <tbody>
+      <tr><td>누가 쓰나</td><td>카페·음식점·반찬가게 운영자, 온라인 식품 판매자</td></tr>
+      <tr><td>어디에 쓰는 문구인가</td><td>메뉴판, 온라인 상세페이지, SNS 홍보 문구</td></tr>
+      <tr><td>무엇을 넣나</td><td>광고 문구나 표시 내용 (예: “면역력 강화”, “다이어트 효과”, “혈당 관리”)</td></tr>
+      <tr><td>무엇을 받나</td><td>위반 소지 여부, 근거 조문, 바꿔 쓰는 방향</td></tr>
+      <tr><td>하지 않는 것</td><td>위법 여부를 단정하거나 법률 자문을 하지 않음</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>입력과 답변 예시</h3>
+  <p class="caption">답변 내용은 설명을 위한 예시이며, 실제 조문은 수집 후 확인합니다.</p>
+  <div class="example">
+    <p><span class="tag">입력</span>일반식품 상세페이지에 “먹으면 혈당이 내려갑니다”라고 써도 되나요?</p>
+    <p><span class="tag">결론</span>위반 소지가 큽니다. 일반식품에서 질병의 예방·치료 효과를 나타내는 표현은 부당한 표시·광고에 해당할 수 있습니다.</p>
+    <p><span class="tag">해야 할 일</span>1) 질병이나 치료를 암시하는 표현을 빼고, 2) 제품이 건강기능식품이라면 인정된 기능성 범위의 표현만 쓰고, 3) 확신이 없으면 관할 기관이나 전문가에게 확인합니다.</p>
+    <p><span class="tag">근거</span>식품 등의 표시·광고에 관한 법률과 시행령 조문 (조문 번호는 수집 후 표시)</p>
+    <p>수집 기준일과 “법령 정보 안내이며 법률 자문이 아닙니다” 문구를 함께 표시</p>
+  </div>
+
+  <h3>개발 배경</h3>
+  <ul>
+    <li>식품 광고 규제는 식품표시광고법, 식품위생법, 건강기능식품법에 흩어져 있어서, 소상공인이 문구 하나를 점검하려면 여러 법을 직접 찾아야 합니다.</li>
+    <li>같은 표현도 일반식품에서는 문제가 되고 건강기능식품에서는 인정된 범위 안에서 허용될 수 있어서, 식품 종류에 따라 다르게 점검해야 합니다.</li>
+    <li>입력이 “문구 한 줄”이라 데모와 평가를 구체적으로 만들 수 있습니다.</li>
+    <li>기존 에스테틱 법률 챗봇의 구성(FastAPI RAG, OpenSearch 하이브리드 검색, BGE-M3, Gemma, Redis 캐시)을 그대로 사용하고, 법령과 인정 기능성 데이터는 이번 프로젝트용으로 새로 수집합니다. 화면은 Spring 대신 FastAPI가 함께 제공하는 웹 화면(데모 화면 기반)으로 단순화합니다.</li>
+  </ul>
+</section>
+
+<!-- 02 -->
+<section id="s02">
+  <h2><span class="n">02</span>범위</h2>
+  <p class="lead">범위는 식품·건강기능식품의 표시·광고 문구 점검으로 고정하고, 사용처는 메뉴판·상세페이지·SNS 홍보 문구로 하며, 그 밖의 질문은 “범위 밖”이라고 알려준 뒤 안내 기관으로 연결합니다.</p>
+
+  <div class="table-wrap"><table>
+    <thead><tr><th>구분</th><th>내용</th></tr></thead>
+    <tbody>
+      <tr><td>다루는 것</td><td>광고 문구가 부당한 표시·광고에 해당할 수 있는지, 건강기능식품 기능성 표현의 범위</td></tr>
+      <tr><td>사용자와 사용처</td><td>카페·음식점·반찬가게 운영자(메뉴판, SNS), 온라인 식품 판매자(상세페이지, SNS)</td></tr>
+      <tr><td>다루지 않는 것</td><td>표시사항 항목 안내(“표시사항에 꼭 넣어야 하는 항목은?” 같은 정보 질문), 영업 신고·인허가, 시설·위생 기준, 세금, 의약품·화장품 광고, 행정처분 결과 예측, 소송</td></tr>
+      <tr><td>대상 식품</td><td>일반식품, 건강기능식품 (2종류로 고정)</td></tr>
+      <tr><td>데이터</td><td>법제처 OpenAPI의 법령·행정규칙(고시), 식약처 식품안전나라 기능성 인정 데이터 (판례·행정처분 사례, 회수·판매중지는 제외)</td></tr>
+    </tbody>
+  </table></div>
+
+  <p><strong>범위 밖 질문 처리</strong>: “이 도우미는 식품·건강기능식품의 표시·광고 문구만 점검합니다”라고 답하고, 영업 신고는 관할 시·군·구청, 제품 심사·신고는 식품의약품안전처로 안내합니다.</p>
+  <p><strong>답변 원칙</strong>: 답변은 “위반 소지가 큼 / 낮음 / 판단하기 어려움” 세 단계로만 표현하고(범위 밖 질문은 판단 없이 거절하므로 화면 상태는 이 셋과 “범위 밖”의 네 가지) “위법입니다”라고 단정하지 않습니다. 모든 답변에 법령명, 조문 번호, 수집 기준일을 표시하고 “법령 정보 안내이며 법률 자문이 아닙니다. 확신이 없으면 관할 기관이나 전문가에게 확인하세요” 문구를 고정으로 붙입니다.</p>
+</section>
+
+<!-- 03 -->
+<section id="s03">
+  <h2><span class="n">03</span>법령 수집 체크리스트</h2>
+  <p class="lead">수집 대상은 법률 3개(식품표시광고법, 건강기능식품법, 식품위생법)와 그 시행령·시행규칙, 식약처 고시(행정규칙)를 법제처 OpenAPI로 수집하고, 식약처 식품안전나라의 기능성 원료 인정 문구(I-0040, I-0050)는 수집·정제를 끝낸 materials.jsonl(731건)을 사용합니다.</p>
+
+  <div class="table-wrap"><table>
+    <thead><tr><th class="num">번호</th><th>법령·데이터</th><th>구분</th><th>쓰임</th><th>수집 확인</th></tr></thead>
+    <tbody>
+      <tr><td class="num">1</td><td>식품 등의 표시·광고에 관한 법률</td><td>법률</td><td>부당한 표시·광고, 표시사항 (공통)</td><td><span class="badge todo">☐ 확인 전</span></td></tr>
+      <tr><td class="num">2</td><td>식품 등의 표시·광고에 관한 법률 시행령</td><td>시행령</td><td>세부 범위 (공통)</td><td><span class="badge todo">☐ 확인 전</span></td></tr>
+      <tr><td class="num">3</td><td>식품 등의 표시·광고에 관한 법률 시행규칙</td><td>시행규칙</td><td>표시 방법 (공통)</td><td><span class="badge todo">☐ 확인 전</span></td></tr>
+      <tr><td class="num">4</td><td>건강기능식품에 관한 법률</td><td>법률</td><td>기능성 표시·광고 (건강기능식품)</td><td><span class="badge todo">☐ 확인 전</span></td></tr>
+      <tr><td class="num">5</td><td>건강기능식품에 관한 법률 시행령</td><td>시행령</td><td>세부 기준 (건강기능식품)</td><td><span class="badge todo">☐ 확인 전</span></td></tr>
+      <tr><td class="num">6</td><td>건강기능식품에 관한 법률 시행규칙</td><td>시행규칙</td><td>표시 방법 (건강기능식품)</td><td><span class="badge todo">☐ 확인 전</span></td></tr>
+      <tr><td class="num">7</td><td>식품위생법</td><td>법률</td><td>영업자 준수사항 중 표시·광고·메뉴 관련 조문 (일반식품)</td><td><span class="badge todo">☐ 관련 조문 범위 확인</span></td></tr>
+      <tr><td class="num">8</td><td>식품위생법 시행규칙</td><td>시행규칙</td><td>세부 기준 (일반식품)</td><td><span class="badge todo">☐ 관련 조문 범위 확인</span></td></tr>
+      <tr><td class="num">9</td><td>식약처 고시: 식품등의 부당한 표시 또는 광고의 내용 기준</td><td>행정규칙</td><td>문구별 판단 기준 (공통)</td><td><span class="badge ok">☑ 수집 완료</span><br>제2025-79호, 조문·별표 10개 문서</td></tr>
+      <tr><td class="num">10</td><td>식약처 고시: 건강기능식품의 기준 및 규격</td><td>행정규칙</td><td>기능성 원료의 기본 기능성 (건강기능식품)</td><td><span class="badge no">✗ 제외</span><br>법제처 API가 본문을 첨부 zip(HWP/PDF)으로만 제공해 제외. 인정 문구가 없으면 “인정된 기능성인지 식약처 확인 필요”로 안내. 첨부 PDF 추출은 선택 과제</td></tr>
+      <tr><td class="num">11</td><td>식품안전나라: I-0040 기능성 원료 인정현황(779건), I-0050 개별인정형 정보(454건)</td><td>보조 데이터</td><td>인정된 기능성 문구 대조 (건강기능식품)</td><td><span class="badge ok">☑ 수집·정제 완료</span><br>materials.jsonl 731건</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>수집 전 확인</h3>
+  <ol>
+    <li>법제처 목록 조회로 각 법령명이 현행 명칭이 맞는지, 현행 여부를 확인합니다.</li>
+    <li>시행령·시행규칙은 법률과 별개의 법령 ID로 각각 조회합니다.</li>
+    <li>9·10번 고시는 법령 조회와 별도의 행정규칙 조회로 받아야 할 수 있어, 정확한 명칭과 수집 방법을 먼저 확인합니다. 받을 수 없으면 1~8번만으로 먼저 진행합니다. 홍삼처럼 식품안전나라에 개별인정 문구만 있는 원료는 10번 고시로 기본 기능성을 보완합니다.</li>
+    <li>기존 에스테틱·회사 프로젝트의 데이터와 자료는 사용하지 않고, 모든 자료를 이번 프로젝트용으로 새로 수집합니다.</li>
+  </ol>
+
+  <p><strong>수집 형식</strong>: 법령·고시 본문을 조문 단위로 나누고, 조문마다 법령명, 조문 번호, 시행일, 수집일, 대상 식품 태그(공통/일반식품/건강기능식품)를 메타데이터로 저장하고, 식품안전나라 자료(원료명, 인정 기능성 문구, 1일 섭취량, 주의사항, 인정번호)는 별도 인덱스(<code>food-materials</code>)에 출처와 수집일을 함께 저장합니다.</p>
+
+  <h3>식품안전나라 데이터 (food-materials 인덱스)</h3>
+  <p>수집은 <code>Fetch_foodsafety.py</code>가 맡아 서비스별로 1,000건씩 받아 <code>data/foodsafety/&lt;서비스ID&gt;.jsonl</code>로 저장하고(인증키는 환경변수 <code>FOODSAFETY_KEY</code>, 한 번 받은 뒤에는 API를 다시 부르지 않음), 정제는 <code>Build_materials.py</code>가 맡아 두 데이터의 필드를 하나로 맞추고 인정번호 표기(2006-11 / 제2006-11호)를 통일한 뒤 같은 인정번호는 합치며 기능성 문구가 빈 건은 제외합니다.</p>
+
+  <div class="table-wrap"><table>
+    <thead><tr><th>단계</th><th class="num">건수</th></tr></thead>
+    <tbody>
+      <tr><td>I-0040 기능성 원료 인정현황 + I-0050 개별인정형 정보</td><td class="num">779건 + 454건</td></tr>
+      <tr><td>인정번호 표기를 통일해 합침 (447건 합침)</td><td class="num">786건</td></tr>
+      <tr><td>기능성 문구가 비어 있는 건 제외</td><td class="num">55건 제외</td></tr>
+      <tr><td>최종 materials.jsonl</td><td class="num"><strong>731건</strong></td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="table-wrap"><table>
+    <thead><tr><th>필드</th><th>내용</th><th>원본 필드</th></tr></thead>
+    <tbody>
+      <tr><td><code>_id</code></td><td>인정번호 (문서 ID)</td><td><code>HF_FNCLTY_MTRAL_RCOGN_NO</code></td></tr>
+      <tr><td><code>material</code></td><td>원료명</td><td><code>APLC_RAWMTRL_NM</code> / <code>RAWMTRL_NM</code></td></tr>
+      <tr><td><code>claims</code></td><td>인정된 기능성 문구 목록 (광고 문구 대조용 원문)</td><td><code>FNCLTY_CN</code> / <code>PRIMARY_FNCLTY</code></td></tr>
+      <tr><td><code>daily_intake</code></td><td>1일 섭취량</td><td><code>DAY_INTK_CN</code> / <code>DAY_INTK_LOWLIMIT~HIGHLIMIT</code></td></tr>
+      <tr><td><code>caution</code></td><td>섭취 시 주의사항</td><td><code>IFTKN_ATNT_MATR_CN</code></td></tr>
+      <tr><td><code>approved</code></td><td>인정일 (I-0040에서 가져옴)</td><td><code>PRMS_DT</code></td></tr>
+      <tr><td><code>text</code></td><td>검색용 본문 (BM25와 임베딩 대상)</td><td>위 필드를 합쳐 생성</td></tr>
+      <tr><td><code>source</code>, <code>sector</code>, <code>datasets</code></td><td>출처 표기, 분야(건강기능식품), 원본 서비스</td><td>—</td></tr>
+    </tbody>
+  </table></div>
+
+  <p><strong>데이터 현황</strong>: 인정 문구는 건당 평균 1.3개(최대 5개)이고, 1일 섭취량은 714건, 주의사항은 613건에 있습니다. 원료명이나 문구에 ‘혈당’이 들어간 건이 37건, ‘체지방’ 117건, ‘면역’ 42건이어서 대표 문구(혈당 관리, 다이어트, 면역력)를 대조할 수 있습니다. 반대로 ‘비타민’이 들어간 건은 없어서, 고시형 원료는 이 데이터에 없고 10번 고시로 보완해야 할 가능성이 큽니다. 회수·판매중지(I0490)와 품목제조 신고(I0030)는 받지 않습니다.</p>
+  <p><strong>중요한 확인</strong>: 일반식품과 건강기능식품의 허용 표현이 다르므로, 4·5·6번 조문과 9·10번 고시, 식품안전나라 인정 문구의 수집 확인이 가장 중요합니다.</p>
+</section>
+
+<!-- 04 -->
+<section id="s04">
+  <h2><span class="n">04</span>시스템 구조</h2>
+  <p class="lead">법령·고시를 한 번 수집해 인덱스로 만들어 두고, 문구가 들어오면 제품 유형 확인 → 기준 검색 → 인정 문구 대조(건강기능식품) 순서로 근거를 찾아 답하는 RAG 구조이고, 근거가 없으면 답변하지 않습니다(범위 밖·근거 없음은 LLM이 Context를 보고 스스로 판단).</p>
+
+  <div class="diagram" role="img" aria-label="시스템 구조: 사전 수집 4단계, 질의 처리 5단계, 고정 안내 1개">
+    <p class="lane-title">사전 수집 (한 번 실행, 월 1회 갱신)</p>
+    <div class="flow">
+      <div class="box"><b>① 수집</b>법제처 OpenAPI (법령·행정규칙), 식품안전나라 OpenAPI</div>
+      <div class="arrow">→</div>
+      <div class="box"><b>② 조문 분할·정제</b>조문 단위 분할, 식품 태그 메타데이터, materials.jsonl</div>
+      <div class="arrow">→</div>
+      <div class="box reuse"><b>③ 임베딩</b>BGE-M3 (Ollama)</div>
+      <div class="arrow">→</div>
+      <div class="box reuse"><b>④ 인덱스 저장</b>OpenSearch 법령 인덱스 + food-materials</div>
+    </div>
+
+    <p class="lane-title">질의 처리 (질문마다 실행)</p>
+    <div class="flow">
+      <div class="box"><b>① 화면 입력</b>식품 종류 토글, 사용처, 광고 문구</div>
+      <div class="arrow">→</div>
+      <div class="box reuse"><b>② FastAPI /rag/query</b>Redis 캐시 확인</div>
+      <div class="arrow">→</div>
+      <div class="box newly"><b>③ 기준 검색</b>하이브리드 (BM25 0.3 + kNN 0.7) + 식품 종류 필터</div>
+      <div class="arrow">→</div>
+      <div class="box newly"><b>④ 인정 문구 대조</b>건강기능식품이면 food-materials와 비교</div>
+      <div class="arrow">→</div>
+      <div class="box reuse"><b>⑤ 답변 생성</b>Gemma가 Context 번호로 근거 지정, 서버가 법령명·조문 번호 채움</div>
+    </div>
+    <div class="notice"><b>고정 안내</b> · 모든 답변 하단에 수집 기준일과 “법령 정보 안내이며 법률 자문이 아닙니다. 확신이 없으면 관할 기관이나 전문가에게 확인하세요” 표시</div>
+
+    <div class="legend">
+      <span class="l-reuse">기존 에스테틱 챗봇 구성 그대로 사용</span>
+      <span class="l-new">이번 주제에서 새로 설계</span>
+      <span class="l-plain">이번 프로젝트용 새 데이터·화면</span>
+    </div>
+  </div>
+
+  <p>위쪽은 한 번만 실행하는 법령·고시와 식품안전나라 자료 수집, 아래쪽은 질문마다 실행하는 처리입니다. 색이 있는 상자는 기존 에스테틱 챗봇의 구성을 그대로 사용하는 부분이고, 데이터는 이번 프로젝트용으로 새로 수집합니다. 식품 종류로 검색 범위를 좁히는 필터 검색, 근거를 Context 번호로만 받아 서버가 법령명·조문 번호를 채우는 근거 표기, 그리고 건강기능식품의 인정 문구 대조와 광고 문구 점검 모드가 이번 주제에서 새로 설계하는 부분입니다. 범위 밖·근거 없음 거절은 기존처럼 LLM이 스스로 판단합니다.</p>
+
+  <div class="table-wrap"><table>
+    <thead><tr><th>구분</th><th>기술</th></tr></thead>
+    <tbody>
+      <tr><td>수집</td><td>Python, 법제처 OpenAPI(법령·행정규칙), 식품안전나라 OpenAPI (<code>Fetch_foodsafety.py</code>, <code>Build_materials.py</code>)</td></tr>
+      <tr><td>저장·검색</td><td>OpenSearch (법령 인덱스 + food-materials 인덱스, 하이브리드 검색 BM25 0.3 + kNN 0.7), BGE-M3 임베딩 (Ollama)</td></tr>
+      <tr><td>서버</td><td>FastAPI (질의 한 개 엔드포인트)</td></tr>
+      <tr><td>답변 생성</td><td>Gemma (Ollama 로컬 LLM), 검색된 조문과 인정 문구만 근거로 사용</td></tr>
+      <tr><td>화면</td><td>FastAPI가 함께 제공하는 웹 화면(HTML/JS, 데모 화면 기반): 식품 종류 토글(일반식품/건강기능식품)을 먼저 고른 뒤 문구를 입력, 메뉴판·상세페이지·SNS 사용처 선택 포함</td></tr>
+      <tr><td>캐시</td><td>Redis 캐시 (기존 구성)</td></tr>
+      <tr><td>배치</td><td>법령·고시 월 1회 갱신 (수집 스크립트 재실행, 바뀐 조문만 다시 인덱싱)</td></tr>
+    </tbody>
+  </table></div>
+
+  <p><strong>이번 범위에서 제외</strong>: 조문 인용 관계 그래프(Neo4j), 멀티턴 대화, 별도 메타데이터 DB(PostgreSQL, 수집 이력은 파일로 기록), Spring 화면.</p>
+</section>
+
+<!-- 05 -->
+<section id="s05">
+  <h2><span class="n">05</span>질문·답변 설계</h2>
+  <p class="lead">답변은 “판단 → 해야 할 일 → 근거 조문 → 기준일과 유의 문구” 순서로 고정하고, 근거 조문이 검색되지 않으면 답하지 않습니다.</p>
+
+  <h3>판단 순서 (3단계)</h3>
+  <ol>
+    <li><strong>제품 유형 확인</strong>: 일반식품인지 건강기능식품인지에 따라 결론이 달라집니다.</li>
+    <li><strong>기준 검색</strong>: 식품표시광고법과 식약처 고시에서 금지 표현 유형을 찾습니다.</li>
+    <li><strong>인정 문구 대조</strong>: 건강기능식품이면 식약처가 인정한 기능성 문구와 비교합니다.</li>
+  </ol>
+
+  <div class="example">
+    <p><span class="tag">시연 예시</span>“우리 카페 홍삼차, 혈당 관리에 최고!”</p>
+    <p>일반식품이면 혈당 표현을 쓸 수 없고(위반 소지 큼), 건강기능식품이면 인정 문구 “혈당 조절에 도움을 줄 수 있음”까지만 가능합니다. “최고” 같은 단정 표현은 빼야 합니다.</p>
+    <p>인정 문구는 수집한 데이터에서 확인한 뒤 확정합니다.</p>
+  </div>
+
+  <h3>대표 입력 (평가 세트의 씨앗)</h3>
+  <div class="table-wrap"><table>
+    <thead><tr><th>사용처</th><th>식품 종류</th><th>입력</th><th>근거 법령·데이터</th></tr></thead>
+    <tbody>
+      <tr><td>SNS</td><td>일반식품</td><td>“면역력 강화에 좋아요”라고 올려도 되나요?</td><td>식품 등의 표시·광고에 관한 법률 및 시행령, 건강기능식품에 관한 법률</td></tr>
+      <tr><td>상세페이지</td><td>일반식품</td><td>“다이어트 효과”라고 써도 되나요?</td><td>식품 등의 표시·광고에 관한 법률 및 시행령, 식약처 고시</td></tr>
+      <tr><td>메뉴판</td><td>일반식품</td><td>메뉴판에 “혈당 관리 샐러드”라고 써도 되나요?</td><td>식품 등의 표시·광고에 관한 법률, 식품위생법, 식약처 고시</td></tr>
+      <tr><td>상세페이지</td><td>건강기능식품</td><td>“혈당 관리에 도움”이라고 써도 되나요?</td><td>건강기능식품에 관한 법률 및 시행령</td></tr>
+      <tr><td>SNS</td><td>건강기능식품</td><td>인정된 기능성 표현만 써야 하나요?</td><td>건강기능식품에 관한 법률 및 시행령</td></tr>
+    </tbody>
+  </table></div>
+  <p>표시사항 질문(“식품 표시사항에 꼭 넣어야 하는 항목이 뭔가요?”, “건강기능식품 표시사항에 들어가야 하는 내용은?”)은 범위 밖으로 처리하고, 평가 세트에서 범위 밖 문구로 씁니다.</p>
+  <p>정답 조문은 법령 수집 후 조문 번호로 확정합니다. 건강기능식품의 기능성 문구 질문은 식품안전나라 인정 문구(food-materials)도 근거에 포함합니다.</p>
+
+  <h3>답변 형식</h3>
+  <ol>
+    <li>판단 한 줄: 위반 소지가 큼 / 낮음 / 판단하기 어려움 중 하나</li>
+    <li>해야 할 일 (순서가 있으면 번호로)</li>
+    <li>근거: 법령명, 조문 번호, 조문 요약 (건강기능식품은 인정 기능성 문구와 인정번호도 함께 표시)</li>
+    <li>하단 고정 문구: 수집 기준일, “법령 정보 안내이며 법률 자문이 아닙니다. 확신이 없으면 관할 기관이나 전문가에게 확인하세요”</li>
+  </ol>
+
+  <h3>거절 규칙</h3>
+  <div class="table-wrap"><table>
+    <thead><tr><th>상황</th><th>처리</th></tr></thead>
+    <tbody>
+      <tr><td>범위 밖 질문 (표시사항 항목 안내, 영업 신고, 위생 기준, 세금, 화장품·의약품 광고 등)</td><td>“이 도우미는 식품·건강기능식품의 표시·광고 문구만 점검합니다”와 관련 기관 안내</td></tr>
+      <tr><td>선택한 식품 종류와 다른 질문</td><td>식품 종류를 바꾸도록 안내한 뒤 다시 검색</td></tr>
+      <tr><td>검색된 조문이 근거로 부족한 질문</td><td>추측하지 않고 “근거 조문을 찾지 못했습니다”와 관할 기관 안내</td></tr>
+      <tr><td>“이건 위법인가요?” 같은 단정 요구, 처분 결과 예측</td><td>위반 소지 수준과 근거 조문만 안내하고 전문가 상담을 권고</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<!-- 06 -->
+<section id="s06">
+  <h2><span class="n">06</span>평가 계획</h2>
+  <p class="lead">정확도 숫자 대신, 미리 정한 정답 조문이 검색 상위에 들어오는지와 범위 밖·근거 없는 질문을 제대로 거절하는지, 단정 표현을 피하는지로 평가합니다.</p>
+
+  <h3>평가 문구 세트 (30~40개)</h3>
+  <div class="table-wrap"><table>
+    <thead><tr><th>구성</th><th class="num">개수</th><th>만드는 방법</th></tr></thead>
+    <tbody>
+      <tr><td>범위 안 기본 문구</td><td class="num">13개</td><td>05의 대표 입력과 추가 문구 (질병 예방·치료, 기능성, 과장·단정 표현 유형과 사용처(메뉴판·상세페이지·SNS)를 고루 포함)</td></tr>
+      <tr><td>같은 문구의 표현 변형</td><td class="num">약 13개</td><td>기본 문구마다 말투와 표현만 바꿈</td></tr>
+      <tr><td>범위 밖 질문</td><td class="num">7개</td><td>표시사항 항목 안내 2개, 영업 신고, 위생 기준, 세금, 화장품·의약품 광고 등</td></tr>
+      <tr><td>근거가 법령에 없는 질문</td><td class="num">5개</td><td>수집한 법령·고시로 답할 수 없는 질문</td></tr>
+    </tbody>
+  </table></div>
+  <p>문구마다 <strong>정답 근거 조문</strong>(법령명과 조문 번호, 건강기능식품은 인정번호)을 미리 정해 둡니다.</p>
+
+  <h3>지표</h3>
+  <div class="table-wrap"><table>
+    <thead><tr><th>지표</th><th>정의</th><th>대상 문구</th></tr></thead>
+    <tbody>
+      <tr><td>근거 검색 적중률</td><td>검색 상위 결과 안에 정답 조문이 포함된 비율</td><td>범위 안 문구</td></tr>
+      <tr><td>근거 표기율</td><td>답변에 법령명과 조문 번호가 표시된 비율</td><td>범위 안 문구</td></tr>
+      <tr><td>거절 정확도</td><td>범위 밖·근거 없는 질문에서 답변하지 않고 안내한 비율</td><td>범위 밖, 근거 없는 질문</td></tr>
+      <tr><td>인용 일치율</td><td>답변에 적힌 조문이 미리 정한 정답 근거와 겹치는 비율 (검색된 조문과의 일치는 근거를 번호로 받는 구조라 형식상 보장)</td><td>범위 안 문구</td></tr>
+      <tr><td>단정 회피율</td><td>“위법입니다”처럼 단정하지 않고 세 단계 표현(큼/낮음/판단 어려움)만 쓴 비율</td><td>범위 안 문구</td></tr>
+      <tr><td>인정 문구 대조 정확도</td><td>건강기능식품 문구에서 인정 기능성 문구와 맞는지 대조한 결과가 정답과 같은 비율</td><td>건강기능식품 문구</td></tr>
+    </tbody>
+  </table></div>
+
+  <p><strong>보고 방식</strong>: 검색 방식별(BM25만, 벡터만, 하이브리드) 적중률을 비교해 표로 보고하면, 하이브리드 구성이 필요한 이유를 숫자로 보여줄 수 있습니다.</p>
+  <p><strong>성공 기준</strong>: 근거 검색 적중률과 거절 정확도를 함께 보고하고, 근거 표기율은 100%를 목표로 합니다. 목표 수치는 첫 평가 결과를 보고 팀이 정합니다.</p>
+</section>
+
+<!-- 07 -->
+<section id="s07">
+  <h2><span class="n">07</span>4일 일정과 역할 분담</h2>
+  <p class="lead">4명이 파트를 나눠 병렬로 진행하고, 3일차에 평가를 끝내야 4일차에 보완과 발표 준비를 할 수 있습니다.</p>
+
+  <div class="table-wrap"><table>
+    <thead><tr><th>일차</th><th>A 법령 수집·정제</th><th>B 검색·인덱스</th><th>C 답변 생성·범위 판단</th><th>D 화면·문구 세트·평가</th></tr></thead>
+    <tbody>
+      <tr><td>1일차</td><td>법령·고시 수집, materials.jsonl(731건) 인수와 현행 확인</td><td>OpenSearch 인덱스(법령·food-materials) 설계, 저장 형식 합의</td><td>FastAPI 뼈대, 프롬프트 초안</td><td>문구 세트 초안, 데모 화면을 <code>web/index.html</code>로 옮기기</td></tr>
+      <tr><td>2일차</td><td>조문 분할·메타데이터(식품 태그) 완료, 정답 조문 정리</td><td>하이브리드 검색과 식품 종류 필터 완료</td><td>답변 형식 파싱, 근거 번호 → 조문 채우기, 인정 문구 대조 구현</td><td>평가 문구 30~40개 완성</td></tr>
+      <tr class="pivot"><td>3일차<br><span class="badge no">분기점</span></td><td>정답 조문 재확인</td><td>검색 방식별 비교 평가</td><td>답변 생성·캐시 연결</td><td>화면과 <code>/rag/query</code> 연결, 전체 평가 실행</td></tr>
+      <tr><td>4일차</td><td>평가 결과로 부족한 법령·조문 보완</td><td>검색 설정 조정</td><td>프롬프트·거절 규칙 보완</td><td>포스터·발표 준비</td></tr>
+    </tbody>
+  </table></div>
+
+  <p>3일차가 일정의 분기점입니다. 평가 결과로 부족한 법령이나 검색 설정을 고칠 시간이 4일차에 남아 있어야 합니다.</p>
+  <p><strong>교차 리뷰</strong>: A는 B의 인덱스 입력을, B는 C의 검색 결과 사용을, C는 D의 문구 세트를, D는 A의 정답 조문을 확인합니다. 주 담당은 방향일 뿐이고, 전원이 수집부터 화면까지 전체 구조를 이해하도록 한 단계씩 수행합니다.</p>
+</section>
+
+<!-- 08 -->
+<section id="s08">
+  <h2><span class="n">08</span>위험 요소와 착수 전 확인</h2>
+  <p class="lead">가장 큰 위험은 문구의 위반 여부를 잘못 안내하는 것이므로, 단정하지 않는 세 단계 표현과 근거 조문 표시, 근거 없으면 답하지 않는 구조로 대응합니다.</p>
+
+  <div class="table-wrap"><table>
+    <thead><tr><th>위험</th><th>대응</th></tr></thead>
+    <tbody>
+      <tr><td>문구의 위반 여부를 잘못 안내</td><td>위반 소지를 큼/낮음/판단 어려움으로만 표현하고, 모든 답변에 법령명·조문 번호·수집 기준일을 표시</td></tr>
+      <tr><td>문구의 맥락에 따라 해석이 달라짐</td><td>맥락이 필요한 문구는 “판단하기 어려움”으로 처리하고 전문가 확인을 권고</td></tr>
+      <tr><td>표시·광고 기준이 고시에 있어 수집하지 못함</td><td>법률·시행령·시행규칙 8개로 먼저 진행하고, 고시 원문을 직접 확인해 추가. 근거가 없으면 “근거 조문을 찾지 못함”으로 처리</td></tr>
+      <tr><td>법령 개정으로 기준이 바뀜</td><td>법령 수집 기준일을 답변과 화면에 표시</td></tr>
+      <tr><td>시행령·시행규칙 누락으로 세부 기준 답변 불가</td><td>03 체크리스트에서 1~10번 수집 여부를 확인하고, 평가에서 조문 단위로 검증</td></tr>
+      <tr><td>범위가 점점 넓어짐</td><td>표시·광고 문구와 식품 2종류 밖의 질문은 범위 밖 안내로 고정</td></tr>
+      <tr><td>4일 일정 지연</td><td>기존 에스테틱 챗봇 구성을 그대로 사용하고 화면을 FastAPI 정적 화면으로 단순화해 설계·구현 시간을 줄이고, 3일차에 평가를 끝내고 4일차는 보완에 사용</td></tr>
+      <tr><td>기존 에스테틱·회사 프로젝트와 같다는 인상</td><td>도메인(식품), 사용자, 법령 코퍼스, 평가 문구 세트가 다름을 개요에 명시하고, 회사 데이터와 자료는 사용하지 않음</td></tr>
+      <tr><td>인정 문구가 없는 원료(예: 홍삼의 기본 기능성, 비타민 같은 고시형 원료)</td><td>고시 「건강기능식품의 기준 및 규격」으로 기본 기능성을 보완하고, 그래도 없으면 ‘인정된 기능성인지 식약처 확인 필요’ 문구를 고정으로 표시</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>착수 전 확인할 것</h3>
+  <ol>
+    <li>팀원과 교수님께 “기존 에스테틱 챗봇의 구성을 그대로 사용하되 데이터와 도메인을 새로 만든 프로젝트”임을 공유하고, 회사 프로젝트와 주제가 겹치지 않는지 확인받습니다.</li>
+    <li>법제처 API 키로 법령과 행정규칙이 모두 조회되는지, 하루 호출 한도가 수집에 충분한지 확인합니다. 식품안전나라 데이터(I-0040, I-0050)는 팀원이 정제까지 끝낸 materials.jsonl(731건)을 받아 사용합니다.</li>
+    <li>법령명과 현행 여부를 법제처 목록 조회로 확인하고, 고시의 정확한 명칭과 수집 가능 여부를 확인합니다.</li>
+    <li>식품위생법에서 메뉴판·접객업 표시와 관련된 조문 범위를 확인해 수집 범위를 정합니다.</li>
+    <li>본 문서의 법령명과 예시 문구는 작성 시점의 정보이므로, 수집 후 조문 번호와 내용을 직접 확인합니다.</li>
+  </ol>
+</section>
+
+
+<!-- ===== Part B ===== -->
+<div class="part" id="partB">
+  <h2>Part B · 스터디 노트 (09~13)</h2>
+  <p>01~08은 기획서이고, 09~13은 <b>지금 돌아가는 프로그램</b>이 어떻게 움직이는지 이해하기 위한 노트입니다. 숫자와 파일 이름은 2026-10-15~16 구현 기준이고, 실제 코드로 확인했습니다. 각 장 끝의 점검 질문을 풀어 보면 이해했는지 확인할 수 있습니다.</p>
+</div>
+
+<!-- 09 -->
+<section id="s09">
+  <h2><span class="n">09</span>전체 흐름: 이 도우미는 어떻게 돌아가나</h2>
+  <p class="lead">도우미는 두 흐름으로 돌아갑니다. <b>A. 준비</b>는 법령과 인정 문구를 검색할 수 있게 미리 만들어 두는 일(처음 한 번, 이후 월 1회)이고, <b>B. 질문 처리</b>는 문구를 넣을 때마다 실행됩니다. B는 A가 만든 인덱스 두 개(<code>food-law-articles</code>, <code>food-materials</code>)만 보고 답합니다.</p>
+
+  <h3>먼저 알아둘 낱말</h3>
+  <div class="table-wrap"><table>
+    <thead><tr><th>낱말</th><th>쉬운 뜻</th><th>이 프로젝트에서</th></tr></thead>
+    <tbody>
+      <tr><td>RAG</td><td>먼저 근거를 검색하고, LLM이 그 근거만 보고 답하게 하는 방식</td><td>근거 = 법령 조문, 식약처 인정 문구</td></tr>
+      <tr><td>청킹</td><td>긴 원문을 검색 한 칸 크기로 자르기</td><td>항 단위, 별표는 약 1,200자 (10장)</td></tr>
+      <tr><td>인덱스</td><td>검색용으로 정리해 저장한 목록</td><td>OpenSearch 3개: 법령 651, 인정 문구 730, 질문 캐시</td></tr>
+      <tr><td>BM25</td><td>같은 단어가 얼마나 겹치는지로 점수를 매기는 키워드 검색</td><td>한글을 두 글자씩 색인(cjk 분석기)</td></tr>
+      <tr><td>임베딩 · kNN</td><td>문장을 숫자 1,024개(벡터)로 바꿔 뜻이 가까운 것을 찾기</td><td>BGE-M3 (Ollama), 코사인 유사도</td></tr>
+      <tr><td>하이브리드</td><td>BM25와 kNN 점수를 섞기</td><td>BM25 0.3 + kNN 0.7</td></tr>
+      <tr><td>캐시</td><td>같은 질문의 답을 저장해 재사용</td><td>Redis, 7일, 유사도 0.95 이상이면 재사용</td></tr>
+      <tr><td>LLM</td><td>답을 문장으로 쓰는 언어 모델</td><td>Gemma (<code>gemma4:e4b</code>, Ollama, 내 PC)</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>한 장 그림</h3>
+  <div class="diagram" role="img" aria-label="전체 흐름: 준비 A-1, A-2, A-3과 질문 처리 B">
+    <p class="lane-title">A-1. 법령·고시 → 무엇이 금지인가</p>
+    <div class="flow">
+      <div class="box"><b>법제처 OpenAPI</b>법령 8개 + 고시 1개 원문 JSON</div>
+      <div class="arrow">→</div>
+      <div class="box"><b>청킹</b>항·별표 단위로 자르기</div>
+      <div class="arrow">→</div>
+      <div class="box reuse"><b>food-law-articles</b>문서 651개</div>
+    </div>
+    <p class="lane-title">A-2. 식약처 인정 기능성 → 건강기능식품이 어디까지 말해도 되는가</p>
+    <div class="flow">
+      <div class="box"><b>식품안전나라</b>I-0040 779건 + I-0050 454건</div>
+      <div class="arrow">→</div>
+      <div class="box"><b>정제·합치기</b>materials.jsonl 731건</div>
+      <div class="arrow">→</div>
+      <div class="box reuse"><b>food-materials</b>문서 730개</div>
+    </div>
+    <p class="lane-title">A-3. 마무리: 두 인덱스의 문서마다 BGE-M3 벡터(1,024차원)를 붙임</p>
+    <div class="flow">
+      <div class="box newly"><b>임베딩</b><code>embed_index.py</code></div>
+    </div>
+    <p class="lane-title">B. 질문 한 건 처리 (문구를 보낼 때마다)</p>
+    <div class="flow">
+      <div class="box"><b>① 입력</b>식품 종류 + 사용처 + 문구</div>
+      <div class="arrow">→</div>
+      <div class="box reuse"><b>② 캐시</b>있으면 바로 답</div>
+      <div class="arrow">→</div>
+      <div class="box newly"><b>③ 검색</b>법령 5 + (건강기능식품이면) 인정 문구 3</div>
+      <div class="arrow">→</div>
+      <div class="box reuse"><b>④ Gemma</b>후보만 보고 1회 답변</div>
+      <div class="arrow">→</div>
+      <div class="box newly"><b>⑤ 파싱</b>번호 → 법령명·조문</div>
+      <div class="arrow">→</div>
+      <div class="box"><b>⑥ 화면</b>판단·할 일·근거</div>
+    </div>
+  </div>
+
+  <h3>A. 준비: 단계별 스크립트</h3>
+  <div class="table-wrap"><table>
+    <thead><tr><th>스크립트</th><th>하는 일</th><th>결과</th></tr></thead>
+    <tbody>
+      <tr><td><code>collect_law.py</code></td><td>법제처에서 법령 8개 원문을 받아(<code>--offline</code>이면 저장본 사용) 자르고 저장</td><td><code>data/law/law_*.json</code>, 법령 문서 641개</td></tr>
+      <tr><td><code>collect_admrul.py</code></td><td>고시 「식품등의 부당한 표시 또는 광고의 내용 기준」을 같은 방식으로 처리</td><td>고시 문서 10개 (법령과 합쳐 651개)</td></tr>
+      <tr><td><code>fetch_foodsafety.py</code> → <code>build_materials.py</code></td><td>식품안전나라 원본을 받고(키 필요, 한 번만) 필드를 맞춰 합침</td><td><code>data/foodsafety/materials.jsonl</code> 731건</td></tr>
+      <tr><td><code>index_materials.py</code></td><td>인정번호 1건 = 문서 1개로 저장 (인정번호 없는 1건 제외)</td><td><code>food-materials</code> 730개</td></tr>
+      <tr><td><code>embed_index.py</code></td><td>벡터가 없는 문서에만 임베딩을 붙임 (처음 약 4분)</td><td>두 인덱스 모두 임베딩 완료</td></tr>
+      <tr><td><code>run_monthly.py</code></td><td>위 단계를 순서대로 실행하고, 한 단계가 실패하면 멈춤</td><td><code>logs/collect.jsonl</code>, <code>logs/law_history.jsonl</code></td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>B. 질문 한 건이 지나가는 길</h3>
+  <p class="caption">예: “우리 카페 홍삼차, 혈당 관리에 최고!” + 일반식품 + SNS</p>
+  <div class="table-wrap"><table>
+    <thead><tr><th class="num">단계</th><th>코드</th><th>하는 일</th></tr></thead>
+    <tbody>
+      <tr><td class="num">1</td><td><code>web/index.html</code> → <code>POST /rag/query</code></td><td>식품 종류(<code>general</code>/<code>health</code>), 사용처(<code>menu</code>/<code>page</code>/<code>sns</code>, 선택), 문구를 보냅니다. 빈 문구와 2,000자 초과는 400 오류로 돌려보냅니다.</td></tr>
+      <tr><td class="num">2</td><td><code>rag_server.py</code> → <code>qa_cache.lookupCache</code></td><td>같은 식품 종류·사용처에서 의미가 거의 같은(유사도 0.95 이상) 질문이 있었으면 저장된 답을 바로 돌려줍니다. 1초 안에 끝납니다.</td></tr>
+      <tr><td class="num">3</td><td><code>rag_pipeline.runFoodRag</code> → <code>search_hybrid.searchLaw</code></td><td>문구 뒤에 “…라는 광고 문구가 부당한 표시 또는 광고에 해당하는지”를 붙여 임베딩하고, BM25 0.3 + kNN 0.7로 조문 5개를 찾습니다. 선택한 식품 종류 + 공통 법령만 봅니다. → 후보 [1]~[5]</td></tr>
+      <tr><td class="num">4</td><td><code>search_hybrid.searchMaterials</code></td><td><b>건강기능식품일 때만</b> 인정 기능성 3개를 더 찾습니다. → 후보 [6]~[8]. 법령도 인정 문구도 하나도 못 찾으면 Gemma를 부르지 않고 “근거 조문을 찾지 못함”으로 답합니다.</td></tr>
+      <tr><td class="num">5</td><td><code>answer_format.buildContext</code> · <code>buildPrompt</code></td><td>후보에 번호를 붙인 Context와, 번호 → 실제 조문 대응표(refTable)를 만들고, 규칙·식품 종류·사용처·Context·문구를 한 프롬프트로 묶습니다.</td></tr>
+      <tr><td class="num">6</td><td><code>rag_pipeline.generateAnswer</code></td><td>Gemma를 한 번 부릅니다. 숨은 “생각”을 끄고(<code>think: false</code>) 모델을 30분 메모리에 둡니다. 8~14초. 답은 <code>[판단] [판단이유] [해야할일] [근거]</code> 태그 형식입니다.</td></tr>
+      <tr><td class="num">7</td><td><code>answer_format.parseAnswer</code> · <code>buildResponse</code></td><td>태그를 읽고, [근거]의 번호를 refTable로 법령명·조문(또는 인정번호·문구)으로 바꿉니다. 없는 번호는 버립니다. 형식이 깨진 답은 캐시에 저장하지 않습니다.</td></tr>
+      <tr><td class="num">8</td><td><code>web/index.html</code></td><td>판단 상태, 해야 할 일, 근거 목록, 수집 기준일과 “법률 자문이 아닙니다” 문구를 보여줍니다.</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>같은 문구, 다른 결과</h3>
+  <div class="table-wrap"><table>
+    <thead><tr><th>입력</th><th>식품 종류</th><th>결과</th></tr></thead>
+    <tbody>
+      <tr><td>우리 카페 홍삼차, 혈당 관리에 최고!</td><td>일반식품</td><td><b>위반 소지 큼</b> · 근거: 시행령 별표 1 (질병 예방·치료 효능 표현 금지)</td></tr>
+      <tr><td>같은 문구</td><td>건강기능식품</td><td><b>위반 소지 큼</b> · 근거: 시행령 별표 1 + 홍삼 제2024-20호 인정 문구 “혈당 조절에 도움을 줄 수 있음”까지만 가능</td></tr>
+      <tr><td>천연 무첨가</td><td>일반식품</td><td><b>판단 어려움</b> · 근거: 고시 제2조 (무첨가·천연 기준), 맥락이 필요</td></tr>
+      <tr><td>영업 신고는 어디에 하나요?</td><td>일반식품</td><td><b>범위 밖</b> · 광고 문구 점검만 하는 도우미라고 안내</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>화면 상태 4가지</h3>
+  <div class="table-wrap"><table>
+    <thead><tr><th>화면 상태</th><th>API 값 (<code>verdict</code>)</th><th>언제</th></tr></thead>
+    <tbody>
+      <tr><td>위반 소지 큼</td><td><code>high</code></td><td>금지 표현에 해당할 가능성이 큼</td></tr>
+      <tr><td>위반 소지 낮음</td><td><code>low</code></td><td>사실에 맞는 표현 등 문제될 가능성이 낮음</td></tr>
+      <tr><td>판단 어려움</td><td><code>unsure</code></td><td>맥락에 따라 해석이 갈림</td></tr>
+      <tr><td>범위 밖</td><td><code>out_of_scope</code></td><td>표시·광고 문구 점검이 아닌 질문, 또는 근거 없음</td></tr>
+    </tbody>
+  </table></div>
+  <p class="small">“위법입니다”처럼 단정하지 않는 것이 원칙입니다. 평가에서는 이 표현이 나오면 단정 회피 실패로 셉니다.</p>
+
+  <div class="keybox"><span class="t">이 흐름의 설계 이유 5가지</span>
+    <ol>
+      <li><b>근거는 번호로만:</b> Gemma는 “[2]번”처럼 번호만 적고, 서버가 법령명·조문으로 바꿉니다. 없는 조문을 지어낼 수 없습니다.</li>
+      <li><b>검색 결과가 없으면 LLM을 부르지 않음:</b> 근거 없이 추측하는 답을 막습니다.</li>
+      <li><b>식품 종류 필터:</b> 같은 문구라도 일반식품과 건강기능식품은 적용 기준이 다릅니다.</li>
+      <li><b>법령 검색에만 광고 맥락 문장을 붙임:</b> 문구만 넣으면 나트륨·알레르기 표시 조문이 먼저 나오던 문제를 고쳤습니다.</li>
+      <li><b>캐시 + think 끄기:</b> 한 건 45~57초 → 8~14초, 캐시된 질문은 1초 안.</li>
+    </ol>
+  </div>
+
+  <div class="selfcheck">
+    <h3>점검 질문</h3>
+    <ol>
+      <li>건강기능식품을 고르면 일반식품과 비교해 검색이 어떻게 달라지나요?<span class="ans">→ 법령 검색은 건강기능식품 + 공통 법령으로 좁혀지고, 인정 문구 3개가 추가로 검색됩니다 (후보 [6]~[8]).</span></li>
+      <li>Gemma가 조문 이름을 직접 쓰지 않는 이유는?<span class="ans">→ 번호만 받아 서버가 실제 법령명·조문으로 바꾸면, 없는 조문을 지어내도 걸러지기 때문입니다.</span></li>
+      <li>같은 문구를 두 번째 보내면 왜 빠른가요? 언제 이 빠름이 문제가 되나요?<span class="ans">→ 캐시(유사도 0.95 이상)에서 바로 답합니다. 프롬프트나 답변 방식을 바꾼 뒤에는 옛 답이 나오므로 캐시를 비워야 합니다.</span></li>
+      <li>검색에서 아무것도 못 찾으면 어떻게 되나요?<span class="ans">→ Gemma를 부르지 않고 “근거 조문을 찾지 못함”으로 답합니다.</span></li>
+    </ol>
+  </div>
+</section>
+
+<!-- 10 -->
+<section id="s10">
+  <h2><span class="n">10</span>청킹과 인덱싱 방식</h2>
+  <p class="lead">청킹은 원문을 검색 결과 한 칸에 들어갈 크기로 자르는 일이고, 인덱싱은 자른 조각을 검색할 수 있게 저장하는 일입니다. 근거를 “법령명 + 조문 번호”로 정확히 보여줘야 하므로, 글자 수가 아니라 <b>법령의 구조(조·항·별표)</b>를 기준으로 자릅니다.</p>
+
+  <h3>처리 순서 (<code>law_map.py</code> → <code>law_parse.py</code> → <code>law_store.py</code>)</h3>
+  <div class="diagram" role="img" aria-label="청킹과 인덱싱 순서">
+    <div class="flow">
+      <div class="box"><b>① 수집 대상</b><code>law_map.py</code>의 법령 목록</div>
+      <div class="arrow">→</div>
+      <div class="box"><b>② 구조 읽기</b>조 · 항 · 호 · 목 · 별표 분리</div>
+      <div class="arrow">→</div>
+      <div class="box newly"><b>③ 청킹</b>항 단위, 긴 것은 1,200자 안팎, 조각마다 머리 붙임</div>
+      <div class="arrow">→</div>
+      <div class="box"><b>④ 문서 만들기</b>고정 ID · 메타데이터 · 본문 지문(hash)</div>
+      <div class="arrow">→</div>
+      <div class="box reuse"><b>⑤ 저장</b>OpenSearch, 이후 임베딩 추가</div>
+    </div>
+  </div>
+
+  <h3>청킹 규칙</h3>
+  <div class="table-wrap"><table>
+    <thead><tr><th>대상</th><th>자르는 단위와 처리</th><th>이유</th></tr></thead>
+    <tbody>
+      <tr><td>법률·시행령·시행규칙 조문</td><td><b>항 하나 = 문서 하나.</b> 항 아래 호·목 내용을 이어 붙임. 항이 없으면 조문 전체가 문서 하나. 장·절 제목과 “삭제”만 있는 조문·항은 제외</td><td>호·목을 안 붙이면 “다음 각 호의 어느 하나에 해당하는…”만 남고 실제 금지 내용이 빠짐</td></tr>
+      <tr><td>식품위생법 계열</td><td>식품위생법은 제44조(영업자 등의 준수사항)만, 시행규칙은 제57조와 별표 17만</td><td>메뉴판·접객 표시와 관련된 부분만 필요</td></tr>
+      <tr><td>고시 조문</td><td>조 단위. 5천여 자로 긴 제2조는 1., 가., (예시) 앞에서 줄을 나눈 뒤 약 1,200자로 자르고, 조각마다 “제2조(…)” 머리를 붙임</td><td>어느 조각이 검색돼도 어느 조문인지 알 수 있게</td></tr>
+      <tr><td>별표</td><td><b>약 1,200자 = 문서 하나.</b> 조각마다 <code>[별표 n] 제목</code>을 맨 앞에 붙임. 서식과 “삭제”된 별표 제외</td><td>별표가 길어서(시행령 별표 1 등) 한 문서로는 검색 정확도가 떨어짐</td></tr>
+      <tr><td>식약처 인정 문구</td><td>인정번호 1건 = 문서 1개. <b>자르지 않음</b></td><td>원료 한 건이 짧음</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>별표 정리 작업 (청킹 품질 수정)</h3>
+  <ul>
+    <li><b>줄 잇기:</b> 원문이 고정 폭으로 줄을 바꿔 “표 / 시”처럼 단어가 끊겨 있어서, 항목 기호(1. 가. 1) ■)로 시작하지 않는 줄은 앞 줄에 다시 잇습니다.</li>
+    <li><b>HTML 기호 복원:</b> <code>&amp;lt;개정…&amp;gt;</code> 같은 기호를 원래 글자로 바꿉니다.</li>
+    <li><b>상자 문자 표:</b> ┌─┐ │ ┏━┓ ┃ 테두리를 지우고 한 행을 <code>칸 | 칸 | 칸</code> 한 줄로 바꿉니다.</li>
+    <li><b>안전장치:</b> 한 줄이 1,200자를 넘으면 글자 수로 강제로 나눕니다. 현재 가장 긴 문서는 1,270자입니다.</li>
+  </ul>
+
+  <h3>실제 조각 예시 (시행령 별표 1, 첫 조각)</h3>
+<pre class="cmd">[별표 1] 부당한 표시 또는 광고의 내용(제3조제1항 관련)          ← 조각마다 붙는 머리
+■ 식품 등의 표시ㆍ광고에 관한 법률 시행령 [별표 1] &lt;개정 2023. 12. 26.&gt; 부당한 표시 또는 광고의 내용(제3조제1항 관련)
+1. 질병의 예방ㆍ치료에 효능이 있는 것으로 인식할 우려가 있는 다음 각 목의 표시 또는 광고
+가. 질병 또는 질병군(疾病群)의 발생을 예방한다는 내용의 표시ㆍ광고. 다만, 다음의 어느 하나에 해당하는 경우는 제외한다.
+1) 특수의료용도식품(정상적으로 섭취, 소화, 흡수 또는 대사할 수 있는 능력이 제한되거나 …</pre>
+
+  <h3>현재 인덱스 <code>food-law-articles</code>: 법령별 문서 수</h3>
+  <div class="table-wrap"><table>
+    <thead><tr><th>법령</th><th>식품 종류 필터</th><th>법제처 ID</th><th class="num">문서 수</th></tr></thead>
+    <tbody>
+      <tr><td>식품 등의 표시·광고에 관한 법률</td><td>공통</td><td>013094</td><td class="num">96</td></tr>
+      <tr><td>같은 법 시행령</td><td>공통</td><td>013453</td><td class="num">47</td></tr>
+      <tr><td>같은 법 시행규칙</td><td>공통</td><td>013475</td><td class="num">77</td></tr>
+      <tr><td>건강기능식품에 관한 법률</td><td>건강기능식품</td><td>009353</td><td class="num">172</td></tr>
+      <tr><td>같은 법 시행령</td><td>건강기능식품</td><td>009581</td><td class="num">71</td></tr>
+      <tr><td>같은 법 시행규칙</td><td>건강기능식품</td><td>009654</td><td class="num">157</td></tr>
+      <tr><td>식품위생법 (제44조)</td><td>일반식품</td><td>001805</td><td class="num">4</td></tr>
+      <tr><td>식품위생법 시행규칙 (제57조, 별표 17)</td><td>일반식품</td><td>007634</td><td class="num">17</td></tr>
+      <tr><td>식품등의 부당한 표시 또는 광고의 내용 기준 (고시 제2025-79호)</td><td>공통</td><td>2100000269428</td><td class="num">10</td></tr>
+      <tr><td>건강기능식품의 기준 및 규격 (고시)</td><td>건강기능식품</td><td>2100000280574</td><td class="num">제외 (첨부파일 전용)</td></tr>
+    </tbody>
+    <tfoot><tr><td colspan="3"><b>합계</b></td><td class="num"><b>651</b></td></tr></tfoot>
+  </table></div>
+
+  <h3>문서 한 건에 저장하는 정보</h3>
+  <div class="table-wrap"><table>
+    <thead><tr><th>필드</th><th>뜻</th><th>쓰임</th></tr></thead>
+    <tbody>
+      <tr><td><code>law_name</code>, <code>kind</code></td><td>법령명, 법률·시행령·시행규칙·고시</td><td>근거 표시</td></tr>
+      <tr><td><code>article_no</code>, <code>clause_no</code></td><td>조문 번호(8, 3의2, 별표 1), 항 번호</td><td>근거 표시, 평가의 정답 비교</td></tr>
+      <tr><td><code>food_type</code></td><td>공통 · 일반식품 · 건강기능식품</td><td><b>검색 필터</b></td></tr>
+      <tr><td><code>content</code></td><td>본문</td><td>BM25 검색(cjk 분석기)과 임베딩 대상</td></tr>
+      <tr><td><code>effective_date</code>, <code>collected_at</code></td><td>시행일, 수집일</td><td>답변의 수집 기준일</td></tr>
+      <tr><td><code>content_hash</code></td><td>본문 지문</td><td>재수집 때 바뀐 것만 다시 저장</td></tr>
+      <tr><td><code>knn_vector</code></td><td>BGE-M3 벡터 1,024차원</td><td>의미 검색 (kNN)</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>식약처 인정 문구 <code>food-materials</code> (730건)</h3>
+  <ul>
+    <li><code>text</code> = “원료명 + 인정된 기능성 + 1일 섭취량 + 주의사항”을 이은 문장 → 검색·임베딩 대상</li>
+    <li><code>claims</code> = 인정 문구 원문 목록 → 광고 문구와 대조하고 화면에 그대로 보여줌</li>
+    <li>예: 홍삼 <code>2024-20</code> “혈당 조절에 도움을 줄 수 있음”</li>
+    <li>인정번호가 비어 있는 원본 1건(풋사과농축분말)은 문서 ID를 만들 수 없어 제외했습니다. (731 → 730)</li>
+  </ul>
+
+  <h3>다시 실행해도 안전한 이유</h3>
+  <div class="keybox"><span class="t">문서 ID가 고정이고, 본문 지문으로 바뀐 것만 갱신</span>
+    <ul>
+      <li>문서 ID 예: <code>law_013094_0008001_1</code> = 법령 ID + 조문키 + 항. 같은 조문은 항상 같은 자리에 들어갑니다.</li>
+      <li>본문 지문이 같으면 건드리지 않고 수집일만 갱신합니다. 벡터를 다시 만들 필요가 없습니다.</li>
+      <li>바뀐 조문은 덮어쓰고, 사라진 조문은 지웁니다. 둘 다 <code>logs/law_history.jsonl</code>에 남습니다.</li>
+      <li>확인 결과: 같은 원본으로 두 번 실행하면 8개 법령 모두 <code>indexed 0, removed 0</code>.</li>
+    </ul>
+  </div>
+
+  <h3>임베딩과 검색 방식</h3>
+  <div class="table-wrap"><table>
+    <thead><tr><th>항목</th><th>내용</th></tr></thead>
+    <tbody>
+      <tr><td>임베딩</td><td>Ollama <code>bge-m3</code>, 16개씩 묶어 처리, 벡터가 없는 문서만 대상</td></tr>
+      <tr><td>벡터 색인</td><td>HNSW, 코사인 유사도 (OpenSearch lucene 엔진)</td></tr>
+      <tr><td>하이브리드 검색</td><td>BM25(키워드) 0.3 + kNN(의미) 0.7. 두 점수를 0~1로 맞춘 뒤 가중 평균 (<code>food-hybrid-pipeline</code>)</td></tr>
+      <tr><td>필터</td><td>선택한 식품 종류 + 공통 법령</td></tr>
+      <tr><td>가져오는 개수</td><td>법령 상위 5개, 인정 문구 상위 3개</td></tr>
+    </tbody>
+  </table></div>
+  <p class="small">두 방식을 섞는 이유: BM25는 “혈당”처럼 정확히 같은 단어를 잘 찾고, kNN은 표현이 달라도(“당 수치가 내려가요”) 뜻이 비슷한 조문을 찾습니다. 평가(챕터 7)에서 BM25만 / 벡터만 / 하이브리드의 적중률을 비교해 숫자로 보여줄 예정입니다.</p>
+
+  <h3>인덱스 3개 정리</h3>
+  <div class="table-wrap"><table>
+    <thead><tr><th>인덱스</th><th>무엇을</th><th class="num">문서 수</th></tr></thead>
+    <tbody>
+      <tr><td><code>food-law-articles</code></td><td>법령·고시 조각</td><td class="num">651</td></tr>
+      <tr><td><code>food-materials</code></td><td>식약처 인정 기능성</td><td class="num">730</td></tr>
+      <tr><td><code>food-qa-cache</code></td><td>캐시용 질문 + 벡터 (답은 Redis <code>foodqa:*</code>에 7일 저장)</td><td class="num">질문에 따라 늘어남</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>검색 품질에서 찾아 고친 문제 2가지</h3>
+  <div class="table-wrap"><table>
+    <thead><tr><th>문제</th><th>원인</th><th>해결</th></tr></thead>
+    <tbody>
+      <tr><td>키워드 검색이 0건</td><td>기본 분석기(standard)는 띄어쓰기로만 잘라 “혈당이”와 “혈당”을 다른 말로 봄</td><td>한글을 두 글자씩 색인하는 <code>cjk</code> 분석기로 바꾸고 인덱스를 다시 만듦</td></tr>
+      <tr><td>의미 검색이 표시사항으로 쏠림</td><td>광고 문구만 넣으면 나트륨·알레르기 표시 조문이 먼저 나옴</td><td>법령 검색에만 “…라는 광고 문구가 부당한 표시 또는 광고에 해당하는지”를 붙임</td></tr>
+    </tbody>
+  </table></div>
+  <p><b>고친 뒤 상위 결과(하이브리드):</b> “먹으면 혈당이 내려갑니다” → 시행령 별표 1 · 부당광고 고시 제2조 · 법 제8조. “고혈압을 치료합니다”도 같은 세 조문이 상위. “천연 무첨가” → 고시 제2조. 건강기능식품 “혈당 조절에 도움” → 인정 문구 서목태펩타이드 2010-53 등.</p>
+
+  <div class="selfcheck">
+    <h3>점검 질문</h3>
+    <ol>
+      <li>항 아래의 호·목을 항 문서에 이어 붙이는 이유는?<span class="ans">→ 안 붙이면 “다음 각 호의 어느 하나에 해당하는…” 같은 껍데기만 검색돼 실제 금지 내용이 빠집니다.</span></li>
+      <li>문서 ID를 고정하고 <code>content_hash</code>를 두는 이유는?<span class="ans">→ 다시 실행해도 같은 조문은 같은 자리에 들어가고, 바뀐 것만 갱신해 임베딩을 다시 만들 필요가 없습니다.</span></li>
+      <li>“혈당이”로 검색했는데 “혈당”이 들어간 조문이 안 나왔다면 어디를 의심하나요?<span class="ans">→ 분석기. standard가 아니라 cjk(두 글자씩 색인)로 인덱스가 만들어졌는지 확인합니다.</span></li>
+      <li>인정 문구는 왜 자르지 않나요?<span class="ans">→ 원료 한 건이 짧고, 인정번호 1건이 근거 1건에 정확히 대응해야 하기 때문입니다.</span></li>
+    </ol>
+  </div>
+</section>
+
+<!-- 11 -->
+<section id="s11">
+  <h2><span class="n">11</span>요구사항과 폴더 구조</h2>
+  <p class="lead">무엇을 만들기로 정했는지(요구사항)와 그 결과가 어느 파일에 들어 있는지(폴더 구조)를 짝지어 보면, 코드를 열었을 때 길을 잃지 않습니다.</p>
+
+  <h3>정한 요구사항</h3>
+  <div class="table-wrap"><table>
+    <thead><tr><th style="width:110px">항목</th><th>정한 내용</th></tr></thead>
+    <tbody>
+      <tr><td>사용자</td><td>카페·음식점·반찬가게 운영자, 온라인 식품 판매자</td></tr>
+      <tr><td>입력</td><td>식품 종류(필수 토글: 일반식품/건강기능식품) + 사용처(메뉴판·상세페이지·SNS, 선택) + 광고 문구(2,000자 이내)</td></tr>
+      <tr><td>답변 형식</td><td>판단 한 줄 → 해야 할 일 → 근거(법령명·조문 번호·요약, 건강기능식품은 인정 문구·인정번호) → 수집 기준일과 고정 문구</td></tr>
+      <tr><td>화면 상태</td><td>위반 소지 큼 · 낮음 · 판단 어려움 · 범위 밖. “위법입니다”라고 단정하지 않음</td></tr>
+      <tr><td>근거 표기</td><td>LLM은 근거 후보 번호만 적고, 서버가 법령명·조문을 채움. 없는 번호는 버림</td></tr>
+      <tr><td>거절</td><td>LLM이 스스로 판단. 범위 밖: 표시사항 항목 안내, 영업 신고·인허가, 위생 기준, 세금, 화장품·의약품 광고, 처분 결과 예측</td></tr>
+      <tr><td>데이터</td><td>법령 8개 + 식약처 고시 1개 + 식약처 인정 기능성 731건(적재 730). 「건강기능식품의 기준 및 규격」은 첨부파일 전용이라 제외</td></tr>
+      <tr><td>실행 환경</td><td>내 PC에서 무료: Docker OpenSearch 3.3.2(9200) · Redis 7.2(6379) · Ollama(bge-m3, gemma4:e4b, GPU 사용) · 서버 localhost:5000</td></tr>
+      <tr><td>속도</td><td>답변 8~14초, 캐시된 질문은 1초 안</td></tr>
+      <tr><td>캐시</td><td>질문(OpenSearch <code>food-qa-cache</code>)과 답(Redis <code>foodqa:*</code>)을 7일 저장. 같은 식품 종류·사용처에서 유사도 0.95 이상이면 재사용. 형식이 깨진 답은 저장 안 함. 답변 방식을 바꾼 뒤·평가 전에는 캐시를 비움</td></tr>
+      <tr><td>패키지</td><td>Python 3.11 + <code>requirements.txt</code> 고정 버전 9개 (requests 2.34.2, python-dotenv 1.2.2, opensearch-py 3.2.0, redis 8.0.1, fastapi 0.136.1, uvicorn 0.47.0, pydantic 2.13.4, httpx 0.28.1, pytest 9.1.1)</td></tr>
+      <tr><td>평가</td><td>검색 적중률(방식별 비교), 근거 표기율(목표 100%), 거절 정확도, 인용 일치율, 단정 회피율, 판단 일치율, 인정 문구 대조 정확도</td></tr>
+      <tr><td>제외</td><td>Spring, PostgreSQL, Neo4j, 멀티턴 대화, 판례·처분 사례, 회수·판매중지</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>환경 설정 값 (<code>.env</code>)</h3>
+  <p class="caption">.env는 git에 올라가지 않습니다. 형식은 <code>.env.example</code>을 복사해서 만듭니다. 값은 여기에 적지 않았습니다.</p>
+  <div class="table-wrap"><table>
+    <thead><tr><th>이름</th><th>뜻</th><th>언제 필요한가</th></tr></thead>
+    <tbody>
+      <tr><td><code>LAW_OC</code></td><td>법제처 OpenAPI 인증값</td><td>법령·고시를 <b>새로</b> 받을 때 (<code>--offline</code>이면 불필요)</td></tr>
+      <tr><td><code>FOODSAFETY_KEY</code></td><td>식품안전나라 인증키</td><td>식약처 원본을 <b>다시</b> 받을 때만</td></tr>
+      <tr><td><code>OS_HOST</code> · <code>OS_USER</code> · <code>OS_PASSWORD</code></td><td>OpenSearch 주소와 계정</td><td>항상. 비밀번호는 Docker 실행 때 정한 값과 같아야 함</td></tr>
+      <tr><td><code>OLLAMA_HOST</code> · <code>EMBED_MODEL</code> · <code>LLM_MODEL</code></td><td>Ollama 주소, 임베딩 모델(bge-m3), 답변 모델(gemma4:e4b)</td><td>항상</td></tr>
+      <tr><td><code>REDIS_HOST</code> · <code>REDIS_PORT</code> · <code>REDIS_DB</code> · <code>REDIS_PASSWORD</code></td><td>Redis 접속 정보</td><td>항상</td></tr>
+      <tr><td><code>QA_CACHE_THRESHOLD</code> · <code>QA_CACHE_TTL_SEC</code></td><td>캐시 재사용 유사도 기준(0.95), 보관 시간(7일)</td><td>캐시 동작을 바꾸고 싶을 때</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>폴더 구조 보기</h3>
+  <details open>
+    <summary>food-ad-helper/ 전체 (파일 이름 옆은 한 줄 설명)</summary>
+<pre class="tree">food-ad-helper/
+├─ scripts/common/food_common.py   설정(loadConfig) · 재시도 · OpenSearch 연결(getOsClient) · 수집 이력(appendLog)
+├─ scripts/collect/                수집 · 청킹 · 적재
+│   ├─ law_map.py                  수집할 법령 목록
+│   ├─ law_parse.py                조문·별표 청킹 (가장 큰 파일)
+│   ├─ law_store.py                문서 ID·지문 만들기, 인덱스 저장
+│   ├─ collect_law.py              법령 8개 수집 → 청킹 → 저장
+│   ├─ collect_admrul.py           고시 수집 → 청킹 → 저장
+│   ├─ fetch_foodsafety.py         식품안전나라 원본 받기 (키 필요, 한 번만)
+│   ├─ build_materials.py          두 데이터를 합쳐 materials.jsonl 만들기
+│   └─ index_materials.py          food-materials 인덱스 적재
+├─ scripts/rag/                    검색 · 답변 · 서버
+│   ├─ embed_index.py              두 인덱스에 임베딩 붙이기
+│   ├─ search_hybrid.py            하이브리드 검색 (searchLaw, searchMaterials)
+│   ├─ answer_format.py            프롬프트 · 답변 파싱 · 근거 채우기
+│   ├─ qa_cache.py                 질문 캐시 (OpenSearch + Redis)
+│   ├─ rag_pipeline.py             검색 → Gemma 1회 → 파싱 전체 (runFoodRag)
+│   ├─ rag_server.py               FastAPI 서버: POST /rag/query, GET /rag/status, 화면 제공
+│   └─ warm_cache.py               발표 전 캐시 미리 채우기
+├─ scripts/run_monthly.py          월 1회 갱신 (수집 → 고시 → 인정 문구 → 임베딩)
+├─ web/index.html                  화면
+├─ eval/                           평가 문구 38개(questions.jsonl) · 지표(metrics.py) · eval_retrieval.py · eval_answers.py
+├─ tests/                          단위 테스트 113개 (OpenSearch·Ollama 없이 실행)
+├─ data/law/  data/foodsafety/     법제처 원본 · 식약처 원본과 정제본
+├─ logs/                           collect.jsonl(실행 결과) · law_history.jsonl(조문 변경)
+├─ docs/superpowers/               specs(설계) · plans(구현 계획)
+├─ requirements.txt  pytest.ini  .env.example  README.md
+└─ 식품 표시·광고 점검 도우미 개요서 (.html / .md)</pre>
+  </details>
+
+  <div class="keybox"><span class="t">코드를 읽는 순서 추천</span>
+    <ol>
+      <li><code>rag_server.py</code> — 질문이 들어오는 입구 (<code>ragQuery</code>)</li>
+      <li><code>rag_pipeline.py</code> — <code>runFoodRag</code> 한 함수에 전체 흐름이 보임</li>
+      <li><code>search_hybrid.py</code> — 어떻게 찾는가 (BM25 + kNN, 필터)</li>
+      <li><code>answer_format.py</code> — 프롬프트, 태그 파싱, 번호 → 조문 바꾸기</li>
+      <li><code>qa_cache.py</code> — 캐시 조회·저장</li>
+      <li><code>law_parse.py</code> → <code>law_store.py</code> — 청킹과 저장 (준비 쪽)</li>
+    </ol>
+  </div>
+
+  <div class="selfcheck">
+    <h3>점검 질문</h3>
+    <ol>
+      <li>“근거 번호를 법령명으로 바꾸는 코드”는 어느 파일에 있나요?<span class="ans">→ <code>scripts/rag/answer_format.py</code> (<code>parseAnswer</code>, <code>buildResponse</code>)</span></li>
+      <li>“별표가 이상하게 잘렸다”면 어느 파일을 보나요?<span class="ans">→ <code>scripts/collect/law_parse.py</code> (청킹). 고친 뒤 <code>collect_law.py --offline</code>으로 다시 청킹·인덱싱.</span></li>
+      <li><code>FOODSAFETY_KEY</code>가 없어도 도우미가 돌아가는 이유는?<span class="ans">→ 식약처 원본·정제본이 <code>data/foodsafety/</code>에 이미 저장돼 있어 API를 다시 부르지 않기 때문입니다.</span></li>
+    </ol>
+  </div>
+</section>
+
+<!-- 12 -->
+<section id="s12">
+  <h2><span class="n">12</span>시작 가이드 (혼자 하는 경우)</h2>
+  <p class="lead">저장소는 이미 <code>C:\Users\SMT03\food-ad-helper</code>에 있으므로 “받기·브랜치 만들기·진행판·교차 리뷰”는 건너뜁니다. 매번 순서는 <b>Docker 켜기 → Ollama 확인 → 서버 켜기 → 화면 열기</b>이고, 인덱스는 PC에 한 번 만들어 두면 계속 쓸 수 있습니다. 명령은 Windows PowerShell 기준이며 모두 무료, 내 PC에서만 돌아갑니다.</p>
+
+  <div class="keybox"><span class="t">매일 시작할 때 (이미 설치·인덱스가 끝난 상태)</span>
+<pre class="cmd">cd C:\Users\SMT03\food-ad-helper
+docker start food-opensearch food-redis
+ollama list                              # bge-m3, gemma4:e4b 보이면 OK
+python scripts/rag/rag_server.py         # 이 창은 닫지 않기 → 브라우저에서 http://localhost:5000</pre>
+    끌 때는 서버 창에서 Ctrl+C. Docker Desktop이 켜져 있어야 합니다.
+  </div>
+
+  <h3>처음부터 다시 준비해야 할 때</h3>
+  <ol class="steps">
+    <li><b>준비물 확인</b>
+      <p>Git, <b>Python 3.11</b>, Docker Desktop, Ollama가 필요합니다. Python 버전이 다르면 일부 패키지가 설치되지 않을 수 있습니다.</p>
+<pre class="cmd">python --version      # 3.11.x
+docker --version
+ollama --version
+git --version</pre>
+    </li>
+    <li><b>폴더로 이동하고 파이썬 환경 켜기</b>
+      <p>이 폴더에 <code>.venv</code>가 있습니다. 쓰고 있다면 활성화합니다.</p>
+<pre class="cmd">cd C:\Users\SMT03\food-ad-helper
+.\.venv\Scripts\Activate.ps1</pre>
+      <p class="small">실행 정책 오류가 나면 그 창에서만 <code>Set-ExecutionPolicy -Scope Process -ExecutionPolicy RemoteSigned</code> 후 다시 실행합니다.</p>
+    </li>
+    <li><b>패키지 설치</b>
+      <p>테스트를 통과한 버전이 <code>requirements.txt</code>에 고정돼 있습니다 (9개).</p>
+<pre class="cmd">pip install -r requirements.txt</pre>
+    </li>
+    <li><b>.env 확인</b>
+      <p>없으면 <code>.env.example</code>을 복사해 만들고 값을 채웁니다. <code>OS_PASSWORD</code>는 다음 단계에서 Docker에 넣는 비밀번호와 똑같이 맞춥니다. <code>LAW_OC</code>는 법령을 새로 받을 때만, <code>FOODSAFETY_KEY</code>는 식약처 원본을 다시 받을 때만 필요합니다.</p>
+<pre class="cmd">Copy-Item .env.example .env
+notepad .env</pre>
+    </li>
+    <li><b>OpenSearch와 Redis 실행</b>
+      <p>이미 만들어 둔 컨테이너는 <code>docker start food-opensearch food-redis</code>만 하면 됩니다. 처음 만들 때만 아래를 실행합니다. 비밀번호는 대문자·소문자·숫자·특수문자를 섞어 8자 이상.</p>
+<pre class="cmd">docker run -d --name food-opensearch -p 9200:9200 -p 9600:9600 -e "discovery.type=single-node" -e "OPENSEARCH_JAVA_OPTS=-Xms1g -Xmx1g" -e "OPENSEARCH_INITIAL_ADMIN_PASSWORD=&lt;비밀번호&gt;" opensearchproject/opensearch:3.3.2
+docker run -d --name food-redis -p 6379:6379 redis:7.2
+docker ps                                # 두 컨테이너가 보이는지</pre>
+    </li>
+    <li><b>Ollama 모델 받기</b>
+      <p>임베딩용 bge-m3(약 1.2GB), 답변용 gemma4:e4b(약 9.6GB). <code>ollama list</code>에 이미 있으면 건너뜁니다.</p>
+<pre class="cmd">ollama pull bge-m3
+ollama pull gemma4:e4b</pre>
+    </li>
+    <li><b>테스트로 설치 확인</b>
+      <p>OpenSearch·Ollama 없이 도는 단위 테스트입니다. 모두 passed면 코드가 잘 있는 것입니다 (113개).</p>
+<pre class="cmd">python -m pytest</pre>
+    </li>
+    <li><b>인덱스 만들기 (PC에 한 번)</b>
+      <p>법령·고시 원본이 저장소에 있어 <code>--offline</code>이면 API 키가 필요 없습니다. <b>임베딩은 항상 마지막</b>에 합니다 (벡터가 없는 문서만 처리, 처음 몇 분).</p>
+<pre class="cmd">python scripts/collect/collect_law.py --offline
+python scripts/collect/collect_admrul.py --offline
+python scripts/collect/index_materials.py
+python scripts/rag/embed_index.py</pre>
+      <p>끝나면 법령 651개, 식약처 730개가 들어갑니다.</p>
+      <p class="small"><b>옛 인덱스를 쓰고 있었다면</b>(2026-10-15 이전, 분석기가 cjk로 바뀌기 전) 먼저 지우고 위 순서대로 다시 만듭니다. 저장된 답 캐시도 함께 비웁니다.</p>
+<pre class="cmd">curl.exe -k -u "admin:&lt;비밀번호&gt;" -X DELETE "https://localhost:9200/food-law-articles,food-materials,food-qa-cache"
+docker exec food-redis redis-cli FLUSHDB</pre>
+    </li>
+    <li><b>서버 켜고 화면 열기</b>
+      <p>서버를 켠 창은 닫지 않습니다. 브라우저에서 <code>http://localhost:5000</code> (API 문서 <code>/docs</code>, 인덱스 상태 <code>/rag/status</code>).</p>
+<pre class="cmd">python scripts/rag/rag_server.py</pre>
+    </li>
+    <li><b>동작 확인 5가지</b>
+      <div class="table-wrap"><table>
+        <thead><tr><th>입력</th><th>식품 종류</th><th>기대 결과</th></tr></thead>
+        <tbody>
+          <tr><td>우리 카페 홍삼차, 혈당 관리에 최고!</td><td>일반식품</td><td>위반 소지 큼, 근거 시행령 별표 1, 수집 기준일 표시</td></tr>
+          <tr><td>같은 문구</td><td>건강기능식품</td><td>위반 소지 큼, 별표 1 + 홍삼 제2024-20호 인정 문구</td></tr>
+          <tr><td>천연 무첨가</td><td>일반식품</td><td>판단 어려움, 고시 제2조</td></tr>
+          <tr><td>영업 신고는 어디에 하나요?</td><td>일반식품</td><td>범위 밖 + 안내 2줄</td></tr>
+          <tr><td>OpenSearch를 잠시 끈 상태에서 아무 문구</td><td>—</td><td>오류 안내가 나오고 입력창이 다시 열림</td></tr>
+        </tbody>
+      </table></div>
+    </li>
+    <li><b>작업 저장</b>
+      <p>테스트를 돌리고 커밋·push합니다. 혼자라서 브랜치와 Pull Request는 선택입니다. 지난번에는 main에 바로 반영했고, 큰 변경은 브랜치로 나눠 두면 되돌리기 쉽습니다.</p>
+<pre class="cmd">python -m pytest
+git add -A
+git commit -m "작업 내용"
+git push</pre>
+    </li>
+  </ol>
+
+  <h3>막혔을 때 먼저 볼 것</h3>
+  <div class="table-wrap"><table>
+    <thead><tr><th>증상</th><th>먼저 확인</th></tr></thead>
+    <tbody>
+      <tr><td>서버 시작 때 OpenSearch 연결 오류</td><td>Docker Desktop이 켜져 있는지, <code>docker ps</code>에 <code>food-opensearch</code>가 있는지, <code>.env</code>의 <code>OS_PASSWORD</code>가 Docker에 넣은 값과 같은지</td></tr>
+      <tr><td>답변이 안 나오거나 매우 느림</td><td>Ollama가 실행 중인지, <code>ollama list</code>에 <code>gemma4:e4b</code>가 있는지. 첫 질문은 모델을 올리는 시간이 걸리고 이후 30분 동안 빠릅니다</td></tr>
+      <tr><td>검색 결과가 이상하거나 0건</td><td><code>/rag/status</code>에서 문서 수(651 / 730)와 임베딩 수가 같은지. 옛 인덱스면 삭제 후 다시 만들기</td></tr>
+      <tr><td>코드를 고쳤는데 답이 그대로</td><td>캐시. <code>docker exec food-redis redis-cli FLUSHDB</code>로 답을 비우고, 질문 인덱스 <code>food-qa-cache</code>도 지운 뒤 서버를 다시 켭니다 (서버가 시작할 때 다시 만듭니다)</td></tr>
+      <tr><td><code>pip install</code> 실패</td><td><code>python --version</code>이 3.11인지</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<!-- 13 -->
+<section id="s13">
+  <h2><span class="n">13</span>앞으로 할 일 (순서대로)</h2>
+  <p class="lead">진행판 기준(2026-10-16)으로 챕터 0~5는 끝났고, 챕터 6은 “창을 좁혀도 가로 스크롤 없음” 1개가 남았고, 챕터 7·8이 남았습니다. 혼자 하므로 담당자와 교차 확인 대신 <b>“스스로 확인할 것”</b>을 붙였습니다. 끝낸 항목은 ☐에 직접 표시하세요.</p>
+
+  <h3>끝난 것 한눈에</h3>
+  <div class="table-wrap"><table>
+    <thead><tr><th>챕터</th><th>한 일</th><th>결과</th></tr></thead>
+    <tbody>
+      <tr><td>0 설계와 코드</td><td>설계·구현 계획 승인, 코드 작성, 단위 테스트</td><td>테스트 전부 통과 (현재 113개)</td></tr>
+      <tr><td>1 실행 환경</td><td>Redis·OpenSearch 컨테이너, <code>.env</code>, 접속 확인, 패키지 버전 고정</td><td>OpenSearch 3.3.2 · Redis 접속 확인</td></tr>
+      <tr><td>2 법령 8개</td><td>수집·청킹·인덱싱, 청킹 품질 수정 3가지(별표 줄 잇기, HTML 기호, 삭제 조문), 재실행 검증</td><td>법령 문서 641개, 두 번째 실행은 변경 0</td></tr>
+      <tr><td>3 고시</td><td>고시 수집·청킹·인덱싱, 긴 제2조 분할, 건강기능식품 기준 및 규격은 제외 결정</td><td>고시 문서 10개 (합계 651)</td></tr>
+      <tr><td>4 식약처 데이터</td><td>인정 기능성 적재, 두 인덱스 임베딩</td><td>식약처 730개, 모두 임베딩</td></tr>
+      <tr><td>5 검색·답변 확인</td><td>일반식품·건강기능식품 검색 확인, 답변 1건 생성, cjk 분석기·광고 맥락 문장·think 끄기</td><td>답변 45~57초 → 8~14초</td></tr>
+      <tr><td>6 서버·화면 (5개 중 4개)</td><td>서버 실행, 일반식품·건강기능식품 시연, 범위 밖, OpenSearch 중단 오류 안내</td><td>남은 것: 좁은 창 확인</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>남은 할 일</h3>
+  <ul class="todo-list">
+    <li><b>챕터 6 마무리: 창을 좁혀도 가로 스크롤이 없는지</b>
+      <p class="small">브라우저 창을 좁게 줄이거나 개발자 도구(F12)의 모바일 보기로 <code>http://localhost:5000</code>을 엽니다. 문구를 넣고 결과 카드까지 봐서 옆으로 스크롤되는 부분이 없으면 끝.</p>
+      <span class="tag-me">직접</span></li>
+    <li><b>챕터 7-① 정답 조문 채우기</b> — <code>eval/questions.jsonl</code>의 in_scope 13개 + variant 13개 = <b>26개</b>의 <code>gold_basis</code> (지금은 문구 38개 전부 비어 있음)
+      <p class="small">형식은 <code>"법령명 제n조"</code> 또는 <code>"법령명 별표 n"</code> (항은 무시). 법령명은 검색 결과의 <code>law_name</code> 그대로 씁니다. 건강기능식품 문구는 <code>gold_recog_no</code>에 인정번호도 채웁니다. 범위 밖 7개와 근거 없음 5개는 정답 조문이 필요 없습니다.</p>
+      <p class="small"><b>스스로 확인:</b> 검색 결과를 그대로 정답으로 베끼면 적중률이 부풀려집니다. 법 조문을 읽고 먼저 정한 뒤, 검색으로 조문 이름 표기만 맞춥니다.</p>
+<pre class="cmd">python scripts/rag/search_hybrid.py "먹으면 혈당이 내려갑니다" --food-type general</pre>
+      <span class="tag-me">직접</span></li>
+    <li><b>챕터 7-② 검색 방식별 적중률</b>
+<pre class="cmd">python eval/eval_retrieval.py</pre>
+      <p class="small">결과: <code>eval/report_retrieval.md</code> — BM25만 / 벡터만 / 하이브리드의 hit@5(상위 5개 안에 정답 조문이 있는 비율) 비교. 정답이 비어 있는 문구는 비율 계산에서 빠지므로, 7-①을 먼저 끝내야 의미 있는 숫자가 나옵니다. <b>스스로 확인:</b> 하이브리드가 한쪽만 쓸 때보다 낮지 않은지.</p></li>
+    <li><b>챕터 7-③ 답변 지표</b> (서버 실행 중, 평가 전에 캐시 비우기)
+<pre class="cmd">docker exec food-redis redis-cli FLUSHDB
+curl.exe -k -u "admin:&lt;비밀번호&gt;" -X DELETE "https://localhost:9200/food-qa-cache"
+python scripts/rag/rag_server.py        # 새 창에서 서버를 다시 켠 뒤
+python eval/eval_answers.py</pre>
+      <p class="small">결과: <code>eval/report_answers.md</code> — 근거 표기율, 거절 정확도, 인용 일치율, 단정 회피율, 판단 일치율, 인정 문구 대조 정확도. 문구마다 서버(Gemma)에 물어보므로 시간이 걸립니다.</p></li>
+    <li><b>챕터 7-④ 근거 표기율이 100% 미만이면 프롬프트 보완</b>
+      <p class="small">틀린 답의 원문을 보고 <code>answer_format.py</code>의 규칙(<code>SYSTEM_PROMPT</code>)을 고칩니다. <b>스스로 확인:</b> 고친 뒤에는 캐시를 비우고 7-③을 다시 실행합니다. 목표 수치는 근거 표기율 100%만 정해졌고, 나머지는 첫 결과를 보고 정합니다.</p></li>
+    <li><b>챕터 8-① 전체 코드 검토와 수정</b>
+      <p class="small"><b>스스로 확인:</b> 이 노트 09~11장의 흐름과 실제 코드가 같은지 한 번 따라가 봅니다 (11장의 “코드를 읽는 순서”). 개요서 01~08의 숫자(문서 수, 건수)와 현재 값이 다르면 고칩니다.</p></li>
+    <li><b>챕터 8-② 병합과 push</b>
+<pre class="cmd">git branch --show-current
+git status
+git log --oneline -5</pre>
+      <p class="small">지금 어느 브랜치에 있고 main에 이미 반영된 것이 무엇인지 확인한 뒤, 남은 변경을 main에 합치고 push합니다. 합치기 전에 <code>python -m pytest</code>.</p>
+      <span class="tag-me">직접</span></li>
+    <li><b>챕터 8-③ 발표 전 캐시 미리 채우기</b> (서버 실행 중)
+<pre class="cmd">python scripts/rag/warm_cache.py</pre>
+      <p class="small">시연 문구의 답이 미리 저장돼 발표 중에는 1초 안에 나옵니다. 프롬프트를 마지막으로 고친 <b>뒤</b>에 실행해야 합니다.</p></li>
+    <li><b>포스터·발표 준비</b>
+      <p class="small">이 노트의 09장 “한 장 그림”과 “같은 문구, 다른 결과”가 그대로 발표 자료의 뼈대가 됩니다. 평가 보고서의 방식별 적중률 표를 “하이브리드가 필요한 이유”로 넣습니다.</p></li>
+    <li><b>(선택) 건강기능식품 기준 및 규격 보완</b>
+      <p class="small">고시 「건강기능식품의 기준 및 규격」 첨부 PDF에서 고시형 원료(비타민 등)의 기능성만 뽑아 <code>food-materials</code>에 추가합니다. 시간이 남을 때만 합니다. 지금은 인정 문구가 없으면 “식약처 확인 필요”로 안내합니다.</p></li>
+  </ul>
+
+  <h3>운영 메모</h3>
+  <ul>
+    <li><b>월 1회 갱신:</b> <code>python scripts/run_monthly.py</code>. 한 단계가 실패하면 멈추고, 바뀐 조문만 다시 인덱싱·임베딩합니다. 결과는 <code>logs/collect.jsonl</code>, 조문 변경은 <code>logs/law_history.jsonl</code>.</li>
+    <li><b>프롬프트·청킹·검색 설정을 바꾼 뒤:</b> 캐시를 비우고 서버를 다시 켠 다음 확인합니다. 청킹을 바꿨다면 <code>collect_law.py --offline</code>으로 다시 청킹·인덱싱합니다.</li>
+    <li><b>답변의 한계:</b> 이 도우미는 법령 정보 안내이며 법률 자문이 아닙니다. 모든 답변에 수집 기준일과 이 문구가 붙습니다.</li>
+  </ul>
+
+  <div class="selfcheck">
+    <h3>마무리 점검 (이 노트를 덮고 말해 보기)</h3>
+    <ol>
+      <li>준비(A)와 질문 처리(B)에서 각각 어떤 파일이 실행되나요?<span class="ans">→ A: collect_law · collect_admrul · index_materials · embed_index (run_monthly). B: rag_server → qa_cache → rag_pipeline → search_hybrid → answer_format.</span></li>
+      <li>같은 문구가 일반식품과 건강기능식품에서 왜 다르게 나오나요?<span class="ans">→ 필터가 다르고, 건강기능식품은 식약처 인정 문구 3개가 근거 후보에 더해집니다.</span></li>
+      <li>평가 숫자를 믿으려면 먼저 무엇이 채워져 있어야 하나요?<span class="ans">→ <code>gold_basis</code> (정답 조문). 비어 있으면 적중률·인용 일치율에서 빠집니다.</span></li>
+    </ol>
+  </div>
+</section>
+
+</div>
+</body>
+</html>
