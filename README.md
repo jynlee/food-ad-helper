@@ -102,9 +102,6 @@ flowchart LR
 - 화면: http://localhost:5000
 - API 문서: http://localhost:5000/docs
   - `POST /rag/query` 문구 점검, `POST /rag/suggest` 추천 문구
-- 캐시 미리 채우기(서버 실행 중): `python scripts/rag/warm_cache.py`
-- 서버를 켠 뒤 첫 질문은 모델을 불러오느라 30초쯤 걸립니다. 발표 전에는 한 번 미리 점검해 두세요.
-- 점검 규칙(`scripts/rag/answer_format.py`, `suggest.py`)을 바꾸면 서버를 다시 켜고 캐시를 비워야 합니다.
 
 ## 테스트와 평가
 
