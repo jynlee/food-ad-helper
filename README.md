@@ -95,6 +95,18 @@ flowchart LR
 
 수집 이력: `logs/collect.jsonl`(실행 결과), `logs/law_history.jsonl`(조문 변경).
 
+`run_monthly.py`는 바뀐 조문만 다시 인덱싱·임베딩하고, 목록에서 빠진 인정 기능성은 인덱스에서 지웁니다. 근거 문서가 하나라도 추가·수정·삭제되면 마지막에 답변·추천 문구 캐시를 비워 예전 조문으로 만든 답이 남지 않게 합니다. 바뀐 것이 없으면 캐시는 그대로 둡니다.
+
+### 매달 자동 갱신 (Windows 작업 스케줄러)
+
+`scripts/run_monthly.bat`를 매달 1일 03:00에 실행하도록 등록합니다. 실행 기록은 `logs/run_monthly.log`에 남습니다.
+
+    schtasks /create /tn "food-ad-helper-monthly" /tr "<저장소 경로>\scripts\run_monthly.bat" /sc monthly /d 1 /st 03:00
+
+- 실행 시각에 OpenSearch·Redis·Ollama가 켜져 있어야 합니다.
+- 그 시각에 PC가 꺼져 있었다면 다음에 켜질 때 실행되도록 작업 스케줄러에서 '예약된 시작 시간을 놓친 경우 가능한 대로 빨리 작업 시작'을 켭니다.
+- 바로 실행해 보기: `schtasks /run /tn "food-ad-helper-monthly"`
+
 ## 실행
 
     python scripts/rag/rag_server.py

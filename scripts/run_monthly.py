@@ -8,7 +8,7 @@ run_monthly.py
 
 사용법:
   python scripts/run_monthly.py
-Windows 작업 스케줄러에 등록할 때는 '시작 위치'를 저장소 루트로 지정한다.
+Windows 작업 스케줄러에는 scripts/run_monthly.bat 를 등록한다 (README 참고).
 """
 
 import json
