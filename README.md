@@ -5,8 +5,8 @@
 문제가 있으면 **다시 점검해서 안전한 문구**를 추천합니다.
 
 <p align="center">
-  <img src="docs/images/overview_01.png" alt="① 문구 입력 → ② 판단과 근거" width="760"><br>
-  <img src="docs/images/overview_02.png" alt="③ 추천 문구 → ④ 결과 저장" width="760">
+  <img src="docs/images/overview_01.png" alt="① 문구 입력 → ② 판단과 근거" width="100%"><br>
+  <img src="docs/images/overview_02.png" alt="③ 추천 문구 → ④ 결과 저장" width="100%">
 </p>
 
 > 법률 자문이 아닌 참고용 안내입니다. "위법입니다"처럼 단정하지 않습니다.
