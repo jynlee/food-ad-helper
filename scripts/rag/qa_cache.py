@@ -9,6 +9,8 @@ BGE-M3 임베딩으로 과거 질문과의 코사인 유사도를 비교해, 임
 저장 위치:
 - OpenSearch (food-qa-cache 인덱스): 질문 임베딩 + 메타 → 유사도 검색용
 - Redis (foodqa:<answer_id>)        : 답변 payload(JSON)
+- Redis (foodsug:<sha1>)             : 추천 문구 (rag_server 가 저장)
+근거 데이터(법령·인정 기능성)가 바뀌면 clearAll 로 모두 비운다 (run_monthly 마지막 단계).
 """
 
 # ============================================================
@@ -32,7 +34,8 @@ from search_hybrid import embedQuery
 # ============================================================
 
 CACHE_INDEX  = "food-qa-cache"
-REDIS_PREFIX = "foodqa:"
+REDIS_PREFIX   = "foodqa:"
+SUGGEST_PREFIX = "foodsug:"
 
 
 # ============================================================
@@ -129,3 +132,31 @@ def storeCache(osClient, redisClient, cfg, docType, queryText, ragResult, scope=
         )
     except Exception as e:
         print(f"[WARN] 캐시 저장 실패 (응답에는 영향 없음): {e}")
+
+
+def clearAll(osClient, redisClient):
+    """답변·추천 문구 캐시와 질문 인덱스 문서를 모두 지운다. 반환: 지운 건수."""
+    counts = {}
+    for name, prefix in (("answers", REDIS_PREFIX), ("suggestions", SUGGEST_PREFIX)):
+        keys = list(redisClient.scan_iter(prefix + "*"))
+        if keys:
+            redisClient.delete(*keys)
+        counts[name] = len(keys)
+    resp = osClient.delete_by_query(index=CACHE_INDEX, body={"query": {"match_all": {}}}, refresh=True)
+    counts["questions"] = resp.get("deleted", 0)
+    return counts
+
+
+def main():
+    """python scripts/rag/qa_cache.py --clear : 캐시 모두 비우기 (근거 데이터가 바뀐 뒤)."""
+    if "--clear" not in sys.argv[1:]:
+        print("사용법: python scripts/rag/qa_cache.py --clear")
+        sys.exit(2)
+    from food_common import getOsClient, loadConfig
+    cfg    = loadConfig()
+    counts = clearAll(getOsClient(cfg), getRedisClient(cfg))
+    print(f"[완료] 캐시 비움: {counts}")
+
+
+if __name__ == "__main__":
+    main()

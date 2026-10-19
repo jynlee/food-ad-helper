@@ -74,3 +74,32 @@ def test_store_writes_redis_and_index_and_survives_failure():
     assert len(redis.store) == 1 and next(iter(redis.store)).startswith(REDIS_PREFIX)
     assert fake.indexed[0][1]["scope"] == "general:menu"
     storeCache(FakeOs(exc=RuntimeError("down")), FakeRedis(), CFG, "food", "q", {}, queryVector=[0.5])
+
+
+class FakeScanRedis(FakeRedis):
+    def scan_iter(self, pattern):
+        return [k for k in list(self.store) if k.startswith(pattern.rstrip("*"))]
+
+    def delete(self, *keys):
+        for k in keys:
+            self.store.pop(k, None)
+
+
+class FakeDeleteOs:
+    def __init__(self):
+        self.deleted = []
+
+    def delete_by_query(self, index, body, refresh):
+        self.deleted.append((index, body))
+        return {"deleted": 3}
+
+
+def test_clear_all_removes_answer_and_suggestion_caches_only():
+    # 법령·인정 기능성이 바뀌면 예전 근거로 만든 답이 7일 동안 남지 않게 바로 비운다
+    r = FakeScanRedis()
+    r.store = {"foodqa:a": "1", "foodqa:b": "2", "foodsug:c": "3", "other:d": "4"}
+    o = FakeDeleteOs()
+    counts = qa_cache.clearAll(o, r)
+    assert set(r.store) == {"other:d"}
+    assert o.deleted[0][0] == CACHE_INDEX
+    assert counts == {"answers": 2, "suggestions": 1, "questions": 3}

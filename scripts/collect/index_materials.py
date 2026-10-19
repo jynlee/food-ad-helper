@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
 index_materials.py
-식약처 건강기능식품 인정 기능성(materials.jsonl, 731건)을 food-materials 인덱스에 적재.
-text가 바뀐 문서만 다시 넣어 knn_vector를 보존한다.
+식약처 건강기능식품 인정 기능성(materials.jsonl)을 food-materials 인덱스에 적재.
+text가 바뀐 문서만 다시 넣어 knn_vector를 보존하고, 목록에서 빠진 원료(인정 취소 등)는 인덱스에서 지운다.
 수집 기준일은 data/foodsafety/COLLECTED_AT 파일 값(식품안전나라 원본 수집일)을 쓴다.
 
 사용법:
@@ -82,6 +82,12 @@ def selectChanged(actions, existingTextById):
     return [a for a in actions if existingTextById.get(a["_id"]) != a["_source"].get("text")]
 
 
+def selectRemoved(existingIds, actions):
+    """인덱스에는 있는데 이번 목록에는 없는 원료 id."""
+    current = {a["_id"] for a in actions}
+    return [i for i in existingIds if i not in current]
+
+
 # ============================================================
 # OpenSearch
 # ============================================================
@@ -90,6 +96,14 @@ def ensureMaterialIndex(osClient):
     if not osClient.indices.exists(index=MATERIAL_INDEX):
         osClient.indices.create(index=MATERIAL_INDEX, body=MAPPING)
         print(f"[INFO] 인덱스 생성 완료: {MATERIAL_INDEX}")
+
+
+def fetchAllIds(osClient):
+    """인덱스에 있는 모든 원료 id."""
+    ids = []
+    for hit in helpers.scan(osClient, index=MATERIAL_INDEX, query={"query": {"match_all": {}}}, _source=False):
+        ids.append(hit["_id"])
+    return ids
 
 
 def fetchExistingText(osClient, ids):
@@ -122,8 +136,14 @@ def main():
         indexed, errors = helpers.bulk(osClient, changed, raise_on_error=False)
         if errors:
             print(f"  [WARN] 인덱싱 오류 {len(errors)}건: {errors[0]}")
+    removed = selectRemoved(fetchAllIds(osClient), actions)
+    if removed:
+        helpers.bulk(osClient, [{"_op_type": "delete", "_index": MATERIAL_INDEX, "_id": i} for i in removed],
+                     raise_on_error=False)
+        print(f"[INFO] 목록에서 빠진 원료 {len(removed)}건 삭제: {removed[:5]}")
     osClient.indices.refresh(index=MATERIAL_INDEX)
-    summary = {"fetched": len(actions), "indexed": indexed, "unchanged": len(actions) - len(changed)}
+    summary = {"fetched": len(actions), "indexed": indexed, "unchanged": len(actions) - len(changed),
+               "removed": len(removed)}
     appendLog("collect", {"source": "foodsafety_materials", "name": MATERIAL_INDEX, "status": "success", **summary})
     print(f"[완료] {summary}")
 

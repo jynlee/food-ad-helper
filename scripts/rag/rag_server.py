@@ -33,7 +33,7 @@ from pydantic import BaseModel
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "common"))
 from food_common import ROOT, getOsClient, loadConfig
-from qa_cache import ensureCacheIndex, getRedisClient, lookupCache, storeCache
+from qa_cache import SUGGEST_PREFIX, ensureCacheIndex, getRedisClient, lookupCache, storeCache
 from rag_pipeline import quickCheck, runFoodRag
 from suggest import runSuggest
 from search_hybrid import LAW_INDEX, MATERIAL_INDEX, ensurePipeline
@@ -44,7 +44,6 @@ from search_hybrid import LAW_INDEX, MATERIAL_INDEX, ensurePipeline
 # ============================================================
 
 MAX_QUERY_LEN  = 2000
-SUGGEST_PREFIX = "foodsug:"     # Redis: 추천 문구 (같은 문구·식품 종류·사용처면 7일 동안 재사용)
 state = {"cfg": None, "osClient": None, "redisClient": None}
 
 

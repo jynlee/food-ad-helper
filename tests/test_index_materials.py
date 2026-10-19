@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from index_materials import MATERIAL_INDEX, buildActions, loadMaterials, selectChanged
+from index_materials import MATERIAL_INDEX, buildActions, loadMaterials, selectChanged, selectRemoved
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -31,3 +31,9 @@ def test_buildActions_skips_rows_without_recognition_number():
     # 원본 I-0040의 풋사과농축분말(APPLOZIN)은 인정번호 칸이 비어 있다 (2026-10-15 확인)
     mats = [{"_id": "", "material": "풋사과농축분말(APPLOZIN)", "text": "t"}, {"_id": "2024-20", "material": "홍삼", "text": "t"}]
     assert [a["_id"] for a in buildActions(mats, "2026-10-15")] == ["2024-20"]
+
+
+def test_selectRemoved_finds_materials_dropped_from_list():
+    # 인정이 취소되거나 목록에서 빠진 원료는 인덱스에서도 지워야 검색 근거로 나오지 않는다
+    actions = buildActions([{"_id": "a", "text": "t"}, {"_id": "c", "text": "t"}], "2026-10-19")
+    assert selectRemoved(["a", "b", "c", "d"], actions) == ["b", "d"]
