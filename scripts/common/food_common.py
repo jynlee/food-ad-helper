@@ -1,15 +1,14 @@
 # -*- coding: utf-8 -*-
 """
 food_common.py
-식품 표시·광고 도우미 챗봇 — 공통 유틸리티
-(에스테틱 챗봇 mazel_common.py 에서 PostgreSQL 부분을 빼고 파일 로그로 바꿈)
+식품 표시·광고 도우미 — 공통 유틸리티 (수집 이력은 DB 대신 파일 로그로 기록)
 
 포함 함수:
 - loadConfig  : .env 로드 → 설정 딕셔너리 반환
 - retryGet    : GET 요청 실패 시 최대 N회 재시도 (선형 백오프)
 - getOsClient : OpenSearch 클라이언트 반환
 - appendLog   : 수집 이력을 logs/<kind>.jsonl 에 한 줄씩 기록
-                (나중에 OpenSearch collect-log 인덱스로 옮길 때는 이 함수 안쪽만 바꾼다)
+                (OpenSearch 인덱스로 옮길 때는 이 함수 안쪽만 바꾸면 된다)
 """
 
 # ============================================================

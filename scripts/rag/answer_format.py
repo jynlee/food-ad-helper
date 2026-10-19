@@ -140,7 +140,7 @@ _BYTE_TOKEN_RE = re.compile(r'(?:<0x[0-9A-Fa-f]{2}>)+')
 def fixByteFallbackTokens(text):
     """
     Ollama/llama.cpp가 병합하지 못한 byte-fallback 토큰(예: <0xEB><0x89><0xBC>)을
-    UTF-8 문자로 복원한다. (에스테틱 rag_pipeline.py 에서 가져옴)
+    UTF-8 문자로 복원한다.
     """
     def repl(m):
         raw = bytes(int(h, 16) for h in re.findall(r'0x([0-9A-Fa-f]{2})', m.group(0)))

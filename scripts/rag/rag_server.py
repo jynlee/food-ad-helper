@@ -159,7 +159,7 @@ def checkQueryText(query):
     return query
 
 
-@app.post("/rag/query", response_model=QueryResponse, tags=["챗봇"])
+@app.post("/rag/query", response_model=QueryResponse, tags=["점검"])
 def ragQuery(req: QueryRequest):
     """광고 문구를 받아 위반 소지·해야 할 일·근거를 반환."""
     query = checkQueryText(req.query)
@@ -169,7 +169,7 @@ def ragQuery(req: QueryRequest):
         raise HTTPException(status_code=500, detail=f"점검 중 오류가 발생했습니다: {e}")
 
 
-@app.post("/rag/suggest", response_model=SuggestResponse, tags=["챗봇"])
+@app.post("/rag/suggest", response_model=SuggestResponse, tags=["점검"])
 def ragSuggest(req: QueryRequest):
     """위반 소지가 큼·어려움인 문구를 고쳐 쓰고, 다시 점검해서 '낮음'이 나온 문구 1개를 반환."""
     query = checkQueryText(req.query)

@@ -4,7 +4,7 @@ law_parse.py
 법제처 법령·행정규칙(고시) JSON을 OpenSearch food-law-articles 문서로 바꾸는 순수 함수 모음.
 collect_law.py / collect_admrul.py 가 함께 사용한다. (네트워크·OpenSearch 접근 없음)
 
-- parseClauses        : 법령 조문 → 항 단위 문서 (호·목 내용 이어붙임, 에스테틱 collect_law.py 방식)
+- parseClauses        : 법령 조문 → 항 단위 문서 (호·목 내용 이어붙임)
 - parseAnnexes        : 별표 → 1,200자 안팎으로 나눈 문서 (서식은 제외)
 - parseAdmrulArticles : 고시 조문내용(줄 목록) → 조 단위 문서
 - pickTarget          : 목록 조회 결과에서 수집 대상 하나 고르기
