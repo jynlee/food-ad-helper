@@ -71,16 +71,34 @@ flowchart LR
 ## 준비
 
 1. `pip install -r requirements.txt`
-2. `.env.example`을 `.env`로 복사하고 `LAW_OC`, OpenSearch·Redis 값을 넣습니다.
-   - `OLLAMA_HOST`는 `http://127.0.0.1:11434`로 둡니다. `localhost`로 쓰면 IPv6부터 시도해서 호출마다 약 2초 늦어집니다.
-3. OpenSearch(neural-search 플러그인 포함), Redis, Ollama를 실행하고 모델을 받습니다.
+2. OpenSearch와 Redis를 Docker로 실행합니다. OpenSearch 공식 이미지에 k-NN·neural-search 플러그인이 들어 있습니다.
+
+       docker run -d --name food-opensearch -p 9200:9200 -p 9600:9600 -e "discovery.type=single-node" -e "OPENSEARCH_JAVA_OPTS=-Xms1g -Xmx1g" -e "OPENSEARCH_INITIAL_ADMIN_PASSWORD=<관리자 비밀번호>" -v food-os-data:/usr/share/opensearch/data opensearchproject/opensearch:3.3.2
+       docker run -d --name food-redis -p 6379:6379 redis:7.2
+
+   - 관리자 비밀번호는 8자 이상이며 대문자·소문자·숫자·특수문자를 모두 넣어야 합니다.
+   - `-v food-os-data:…`는 컨테이너를 지웠다 다시 만들어도 인덱스가 남도록 데이터를 볼륨에 저장합니다.
+3. Ollama를 설치하고 모델을 받습니다.
 
        ollama pull bge-m3
        ollama pull gemma4:e4b
 
+4. `.env.example`을 `.env`로 복사하고 `OS_PASSWORD`에 2번의 관리자 비밀번호를 넣습니다. 나머지 값은 그대로 둡니다.
+   - `LAW_OC`(법제처 OpenAPI 키)는 법령을 새로 받을 때만 필요합니다. 비워 두고 아래 `--offline`으로 저장소의 원본을 쓸 수 있습니다.
+   - `OLLAMA_HOST`는 `http://127.0.0.1:11434`로 둡니다. `localhost`로 쓰면 IPv6부터 시도해서 호출마다 약 2초 늦어집니다.
+
 ## 데이터 만들기 (처음 한 번, 이후 월 1회)
 
     python scripts/run_monthly.py
+
+`LAW_OC` 없이 저장소의 원본(`data/law`, `data/foodsafety`)으로 만들려면:
+
+    python scripts/collect/collect_law.py --offline
+    python scripts/collect/collect_admrul.py --offline
+    python scripts/collect/index_materials.py
+    python scripts/rag/embed_index.py
+
+다 만들면 법령·고시 651건, 인정 기능성 730건이 들어갑니다.
 
 단계별로 실행하려면:
 
