@@ -171,6 +171,32 @@ def test_buildResponse_in_scope_without_valid_refs_is_not_refused():
     assert resp["verdict"] == "unsure" and resp["basis"] == []
 
 
+GEMMA_NO_NUMBER = """[판단] 낮음
+[판단이유] 사용하려는 문구는 건강기능식품의 인정 기능성 문구에 명확히 포함되어 있어 사용이 가능합니다.
+[해야할일]
+1. 현재 사용하려는 문구는 인정된 기능성 문구이므로 사용 가능합니다.
+[근거]
+[인정 기능성 문구] | '혈당 조절에 도움을 줄 수 있음'은 홍삼 원료에 대해 인정된 기능성 문구와 일치합니다.
+[범위밖사유] 근거없음
+[식품종류] 일치"""
+
+
+def test_buildResponse_adds_material_whose_claim_is_in_query_when_not_cited():
+    query = "홍삼 상세페이지에 “혈당 조절에 도움을 줄 수 있음”이라고 써도 되나요?"
+    resp = buildResponse(parseAnswer(GEMMA_NO_NUMBER), REFS, GEMMA_NO_NUMBER, query=query)
+    assert resp["verdict"] == "low"
+    assert [(b["type"], b.get("recog_no")) for b in resp["basis"]] == [("material", "2024-20")]
+    assert resp["collected_at"] == "2026-10-15"
+
+
+def test_buildResponse_matched_material_not_duplicated_or_added_without_match():
+    query = "홍삼에 “혈당 조절에 도움을 줄 수 있음”이라고 써도 되나요?"
+    resp = buildResponse(parseAnswer(NORMAL), REFS, NORMAL, query=query)
+    assert [b.get("recog_no") for b in resp["basis"]] == [None, "2024-20"]
+    resp = buildResponse(parseAnswer(GEMMA_NO_NUMBER), REFS, GEMMA_NO_NUMBER, query="홍삼으로 당뇨를 치료합니다")
+    assert resp["basis"] == []
+
+
 def test_buildResponse_no_hits_uses_no_basis_and_fallback_date():
     resp = buildResponse(NO_BASIS_PARSED, {}, "", "2026-10-16")
     assert resp["verdict"] == "out_of_scope" and resp["out_of_scope_reason"] == "no_basis"

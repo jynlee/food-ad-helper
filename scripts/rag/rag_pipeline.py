@@ -98,7 +98,7 @@ def runFoodRag(osClient, cfg, query, foodType, usage=None, queryVector=None):
     if prompt is None:
         return buildResponse(NO_BASIS_PARSED, {}, "", latestIndexCollectedAt(osClient))
     raw = generateAnswer(cfg, prompt)
-    return buildResponse(parseAnswer(raw), refTable, raw)
+    return buildResponse(parseAnswer(raw), refTable, raw, query=query)
 
 
 def quickCheck(osClient, cfg, query, foodType, usage=None):

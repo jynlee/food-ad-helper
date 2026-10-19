@@ -336,12 +336,19 @@ def resolveBasis(basisRefs, refTable):
     return items, used
 
 
+def claimRefsInQuery(query, refTable):
+    """질문에 인정 기능성 문구가 그대로 들어 있는 원료 번호. LLM이 [근거]에 번호를 빠뜨려도 근거로 보여 주기 위함."""
+    q = _squash(query)
+    return [n for n, e in refTable.items()
+            if q and e["type"] == "material" and any(_squash(c) and _squash(c) in q for c in e.get("claims") or [])]
+
+
 def latestCollectedAt(entries):
     dates = [e.get("collected_at") for e in entries if e.get("collected_at")]
     return max(dates) if dates else None
 
 
-def buildResponse(parsed, refTable, raw, fallbackCollectedAt=None):
+def buildResponse(parsed, refTable, raw, fallbackCollectedAt=None, query=None):
     """parsed + refTable → API 응답 dict (spec 5.5)."""
     contextDate = latestCollectedAt(list(refTable.values())) or fallbackCollectedAt
     resp = {
@@ -368,7 +375,8 @@ def buildResponse(parsed, refTable, raw, fallbackCollectedAt=None):
                     actions=list(OUT_OF_SCOPE_ACTIONS[reason]))
         return resp
 
-    items, used = resolveBasis(parsed["basis_refs"], refTable)
+    refs = parsed["basis_refs"] + [(n, "") for n in claimRefsInQuery(query, refTable)]
+    items, used = resolveBasis(refs, refTable)
     resp.update(verdict=parsed["verdict"], actions=parsed["actions"], basis=items,
                 collected_at=latestCollectedAt([refTable[n] for n in used]) or contextDate)
     return resp

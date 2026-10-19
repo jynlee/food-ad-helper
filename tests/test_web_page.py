@@ -36,8 +36,9 @@ def test_demo_only_parts_removed():
     assert re.search(r"function classify\(", PAGE) is None
 
 
-def test_law_list_includes_health_functional_standard():
-    assert "건강기능식품의 기준 및 규격" in PAGE
+def test_law_list_shows_only_collected_notice():
+    assert "부당한 표시 또는 광고의 내용 기준" in PAGE
+    assert "건강기능식품의 기준 및 규격" not in PAGE    # 본문이 첨부 파일뿐이라 수집에서 제외
 
 
 def test_suggest_button_only_for_high_or_unsure_next_to_save():
