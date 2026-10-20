@@ -31,9 +31,26 @@ def articleKey(lawName, article):
     return f"{lawName} {m.group(1) if m else article}"
 
 
+def hitKey(hit):
+    return articleKey(hit["law_name"], formatArticle(hit["article_no"], hit["clause_no"]))
+
+
 def hitAtK(lawHits, gold):
-    keys = {articleKey(h["law_name"], formatArticle(h["article_no"], h["clause_no"])) for h in lawHits}
-    return bool(keys & set(gold))
+    return bool({hitKey(h) for h in lawHits} & set(gold))
+
+
+def reciprocalRank(lawHits, gold):
+    """처음 나온 정답 근거의 순위 역수 (1위 1.0, 2위 0.5 …, 없으면 0)."""
+    for rank, h in enumerate(lawHits, start=1):
+        if hitKey(h) in gold:
+            return 1 / rank
+    return 0.0
+
+
+def recallAtK(lawHits, gold):
+    """정답 근거 중 검색 결과에 나온 비율 (조문 단위, 중복은 한 번)."""
+    gold = set(gold)
+    return len({hitKey(h) for h in lawHits} & gold) / len(gold) if gold else 0.0
 
 
 def basisKeys(basis):

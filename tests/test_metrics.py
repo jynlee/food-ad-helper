@@ -1,4 +1,4 @@
-from metrics import METRIC_LABELS, articleKey, hitAtK, scoreAnswer, summarize
+from metrics import METRIC_LABELS, articleKey, hitAtK, recallAtK, reciprocalRank, scoreAnswer, summarize
 
 LAW = "식품 등의 표시·광고에 관한 법률"
 
@@ -13,6 +13,22 @@ def test_hitAtK_matches_on_article_level():
     hits = [{"law_name": LAW, "article_no": "8", "clause_no": "2"}]
     assert hitAtK(hits, [f"{LAW} 제8조"]) is True
     assert hitAtK(hits, [f"{LAW} 제9조"]) is False
+
+
+def test_reciprocalRank_uses_first_gold_position():
+    hits = [{"law_name": LAW, "article_no": "4", "clause_no": "1"},
+            {"law_name": LAW, "article_no": "8", "clause_no": "1"},
+            {"law_name": LAW, "article_no": "8", "clause_no": "2"}]
+    assert reciprocalRank(hits, [f"{LAW} 제8조"]) == 0.5
+    assert reciprocalRank(hits, [f"{LAW} 제9조"]) == 0.0
+
+
+def test_recallAtK_counts_distinct_gold_found():
+    hits = [{"law_name": LAW, "article_no": "8", "clause_no": "1"},
+            {"law_name": LAW, "article_no": "8", "clause_no": "2"},
+            {"law_name": LAW, "article_no": "별표 1", "clause_no": "0"}]
+    gold = [f"{LAW} 제8조", f"{LAW} 별표 1", f"{LAW} 제9조", f"{LAW} 별표 2"]
+    assert recallAtK(hits, gold) == 0.5
 
 
 def question(**kw):

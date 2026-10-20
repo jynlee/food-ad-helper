@@ -80,6 +80,15 @@ def test_searchLaw_hybrid_uses_pipeline_and_given_vector(monkeypatch):
     assert fake.calls[0]["params"] == {"search_pipeline": "food-hybrid-pipeline"}
 
 
+def test_searchLaw_weights_send_inline_pipeline_instead_of_named(monkeypatch):
+    fake = FakeOs()
+    searchLaw(fake, {}, "혈당", "general", queryVector=VEC, weights=(0.5, 0.5))
+    call = fake.calls[0]
+    assert call["params"] == {}
+    combo = call["body"]["search_pipeline"]["phase_results_processors"][0]["normalization-processor"]["combination"]
+    assert combo["parameters"]["weights"] == [0.5, 0.5]
+
+
 def test_searchMaterials_targets_material_index():
     fake = FakeOs()
     hits = searchMaterials(fake, {}, "혈당", queryVector=VEC)

@@ -55,18 +55,23 @@ def ensurePipeline(osClient):
         return
     except Exception:
         pass
-    pipeline = {
+    osClient.transport.perform_request("PUT", f"/_search/pipeline/{PIPELINE_ID}",
+                                       body=pipelineBody((WEIGHT_BM25, WEIGHT_KNN)))
+    print(f"[INFO] 검색 파이프라인 생성: {PIPELINE_ID}")
+
+
+def pipelineBody(weights):
+    """min_max 정규화 후 (BM25, kNN) 가중 평균하는 검색 파이프라인 정의."""
+    return {
         "description": "식품 표시·광고 하이브리드 검색 파이프라인",
         "phase_results_processors": [{
             "normalization-processor": {
                 "normalization": {"technique": "min_max"},
                 "combination":   {"technique": "arithmetic_mean",
-                                  "parameters": {"weights": [WEIGHT_BM25, WEIGHT_KNN]}},
+                                  "parameters": {"weights": list(weights)}},
             }
         }],
     }
-    osClient.transport.perform_request("PUT", f"/_search/pipeline/{PIPELINE_ID}", body=pipeline)
-    print(f"[INFO] 검색 파이프라인 생성: {PIPELINE_ID}")
 
 
 def embedQuery(cfg, queryText):
@@ -151,13 +156,16 @@ def lawSearchText(queryText):
     return queryText.rstrip() + LAW_QUERY_SUFFIX
 
 
-def searchLaw(osClient, cfg, queryText, foodType, topK=5, mode="hybrid", queryVector=None):
-    """법령·고시 검색. bm25 모드는 임베딩을 만들지 않는다."""
+def searchLaw(osClient, cfg, queryText, foodType, topK=5, mode="hybrid", queryVector=None, weights=None):
+    """법령·고시 검색. bm25 모드는 임베딩을 만들지 않는다. weights=(BM25, kNN)를 주면 그 가중치로 검색 (평가용)."""
     searchText = lawSearchText(queryText)          # queryVector를 넘길 때는 이 문장의 벡터여야 한다
     if mode != "bm25" and queryVector is None:
         queryVector = embedQuery(cfg, searchText)
     body   = buildLawQuery(searchText, queryVector, foodType, topK, mode)
     params = {"search_pipeline": PIPELINE_ID} if mode == "hybrid" else {}
+    if mode == "hybrid" and weights:
+        body["search_pipeline"] = pipelineBody(weights)    # 저장된 파이프라인 대신 요청에 담아 보냄
+        params = {}
     resp   = osClient.search(index=LAW_INDEX, body=body, params=params)
     return [toLawHit(h, i + 1) for i, h in enumerate(resp["hits"]["hits"])]
 
