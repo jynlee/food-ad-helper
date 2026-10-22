@@ -68,6 +68,14 @@ flowchart LR
 | 캐시 | Redis 7.2 (답변), OpenSearch (비슷한 질문 찾기) |
 | 서버 · 화면 | FastAPI, HTML·CSS·JavaScript (한 파일) |
 
+### 검색 방식
+
+| 항목 | 설정 |
+|---|---|
+| 자르는 단위 | 법령 조문은 항 하나 = 문서 하나, 별표·긴 고시는 약 1,200자씩 |
+| 하이브리드 검색 | BM25 0.3 + kNN(bge-m3) 0.7 |
+| 가져오는 근거 | 법령 상위 5건, 인정 기능성 상위 3건 (건강기능식품일 때만) |
+
 ## 준비
 
 1. `pip install -r requirements.txt`
@@ -133,8 +141,31 @@ flowchart LR
 
 ## 테스트와 평가
 
-    python -m pytest                     # 단위 테스트 (OpenSearch·Ollama 없이)
-    python eval/eval_retrieval.py        # 검색 방식별 hit@5 → eval/report_retrieval.md
+평가 문구 38개(범위 안 13, 바꿔 쓴 문구 13, 범위 밖 7, 근거 없음 5)로 검색과 답변을 평가했습니다.
+
+**검색** (범위 안·바꿔 쓴 문구 26개, 법령 상위 5건)
+
+| 방식 (BM25:kNN) | hit@5 | MRR | recall@5 |
+|---|---|---|---|
+| BM25만 | 76.9% | 0.465 | 39.1% |
+| kNN만 | 100% | 0.904 | 84.0% |
+| **하이브리드 0.3:0.7 (사용)** | **100%** | **0.974** | 78.2% |
+
+hit@5: 상위 5건 안에 정답 근거가 있는 비율 · MRR: 첫 정답 순위의 역수 평균 · recall@5: 정답 근거 중 상위 5건에 든 비율
+
+**답변** (실행 중인 서버로 38개 전체)
+
+| 지표 | 결과 |
+|---|---|
+| 판단 일치율 | 94.7% (36/38) |
+| 인용 일치율 | 84.6% (22/26) |
+| 단정 회피율 | 100% (26/26) |
+| 거절 정확도 | 100% (12/12) |
+
+전체 결과: `eval/report_retrieval.md`, `eval/report_answers.md`
+
+    python -m pytest                     # 단위 테스트 164개 (OpenSearch·Ollama 없이)
+    python eval/eval_retrieval.py        # 검색 방식별 hit@5·MRR·recall@5 → eval/report_retrieval.md
     python eval/eval_answers.py          # 답변 지표 (서버 실행 중) → eval/report_answers.md
 
 ## 문서

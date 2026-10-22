@@ -1,5 +1,5 @@
-from answer_format import (DISCLAIMER, NO_BASIS_PARSED, OUT_OF_SCOPE_ACTIONS, buildResponse, latestCollectedAt,
-                           articleText, parseAnswer, resolveBasis, shortSummary)
+from answer_format import (DISCLAIMER, NO_BASIS_PARSED, OUT_OF_SCOPE_ACTIONS, buildResponse, claimRefsInQuery,
+                           latestCollectedAt, articleText, parseAnswer, resolveBasis, shortSummary)
 
 REFS = {
     1: {"type": "law", "law_name": "식품 등의 표시·광고에 관한 법률", "article_no": "8", "clause_no": "1",
@@ -195,6 +195,24 @@ def test_buildResponse_matched_material_not_duplicated_or_added_without_match():
     assert [b.get("recog_no") for b in resp["basis"]] == [None, "2024-20"]
     resp = buildResponse(parseAnswer(GEMMA_NO_NUMBER), REFS, GEMMA_NO_NUMBER, query="홍삼으로 당뇨를 치료합니다")
     assert resp["basis"] == []
+
+
+CLA_REFS = {
+    1: {"type": "material", "material": "CLA FFA", "recog_no": "2006-28",
+        "claims": ["공액리놀레산(Conjugated Linoleic Acid)는 과체중인 성인의 체지방 감소에 도움을 줄 수 있습니다"],
+        "collected_at": "2026-10-15"},
+}
+
+
+def test_claimRefsInQuery_matches_paraphrased_claim():
+    assert claimRefsInQuery("CLA 제품 설명에 과체중 성인 체지방 감소에 도움 줄 수 있다고 넣어도 되나요?", CLA_REFS) == [1]
+    assert claimRefsInQuery("홍삼 제품에 혈당 조절에 도움 줄 수 있다고 적는 건 괜찮나요?", REFS) == [3]
+
+
+def test_claimRefsInQuery_ignores_shared_ending_and_other_effects():
+    assert claimRefsInQuery("CLA 먹으면 한 달 10kg 빠진다고 인스타에 써도 돼요?", CLA_REFS) == []
+    assert claimRefsInQuery("홍삼이 면역력 증진에 도움을 줄 수 있음이라고 써도 되나요?", REFS) == []
+    assert claimRefsInQuery("홍삼 건기식 홍보에 당뇨 치료된다고 써도 될까요?", REFS) == []
 
 
 def test_buildResponse_no_hits_uses_no_basis_and_fallback_date():

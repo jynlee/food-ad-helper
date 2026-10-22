@@ -3,6 +3,8 @@
 eval_answers.py
 실행 중인 서버의 /rag/query 를 문구 세트 전체로 호출해 답변 지표를 계산한다.
 결과: eval/report_answers.md (지표 표 + 문구별 결과)
+문구마다 호출 직전에 답변 캐시를 비운다. 비슷한 문구가 앞 문구의 저장된 답을 받아 오지 않게 하기 위함
+(끝나면 캐시에는 마지막 문구의 답만 남는다).
 
 사용법 (rag_server.py 실행 중):
   python eval/eval_answers.py
@@ -20,7 +22,11 @@ import requests
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
+sys.path.insert(0, str(HERE.parent / "scripts" / "rag"))
+sys.path.insert(0, str(HERE.parent / "scripts" / "common"))
+from food_common import getOsClient, loadConfig
 from metrics import formatTable, scoreAnswer, summarize
+from qa_cache import clearAll, getRedisClient
 
 ORDER = ["basis_shown", "refusal_ok", "citation_match", "no_decisive", "verdict_match", "material_match"]
 
@@ -35,8 +41,12 @@ def main():
     parser.add_argument("--base-url", default="http://localhost:5000")
     baseUrl = parser.parse_args().base_url
 
+    cfg = loadConfig()
+    osClient, redisClient = getOsClient(cfg), getRedisClient(cfg)
+
     rows, details = [], []
     for q in loadQuestions():
+        clearAll(osClient, redisClient)
         start = time.time()
         body  = {"query": q["query"], "food_type": q["food_type"], "usage": q["usage"]}
         try:

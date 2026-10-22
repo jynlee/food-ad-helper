@@ -336,11 +336,31 @@ def resolveBasis(basisRefs, refTable):
     return items, used
 
 
+CLAIM_MATCH_RATIO = 0.6     # 기능 부분 두 글자 묶음 중 질문에 있어야 하는 비율 (평가 문구로 정한 값)
+
+
+def _claimCore(claim):
+    """인정 문구에서 기능 부분만: 괄호·원료 주어("○○은 ")·"도움을 줄 수 있음" 이하를 뺀다."""
+    text = re.sub(r"\([^)]*\)", "", claim or "").split("도움")[0]
+    text = re.sub(r"^.*?[은는]\s", "", text)
+    return re.sub(r"[에을를]$", "", _squash(text).lstrip("·"))
+
+
+def _bigrams(text):
+    return {text[i:i + 2] for i in range(len(text) - 1)}
+
+
 def claimRefsInQuery(query, refTable):
-    """질문에 인정 기능성 문구가 그대로 들어 있는 원료 번호. LLM이 [근거]에 번호를 빠뜨려도 근거로 보여 주기 위함."""
-    q = _squash(query)
+    """질문에 인정 기능성 문구(기능 부분)가 들어 있는 원료 번호. 조사를 빼거나 바꿔 써도 찾는다.
+    LLM이 [근거]에 번호를 빠뜨려도 근거로 보여 주기 위함."""
+    q = _bigrams(_squash(query))
+
+    def matches(claim):
+        core = _bigrams(_claimCore(claim))
+        return len(core) >= 2 and len(core & q) / len(core) >= CLAIM_MATCH_RATIO
+
     return [n for n, e in refTable.items()
-            if q and e["type"] == "material" and any(_squash(c) and _squash(c) in q for c in e.get("claims") or [])]
+            if q and e["type"] == "material" and any(matches(c) for c in e.get("claims") or [])]
 
 
 def latestCollectedAt(entries):
