@@ -59,6 +59,12 @@ flowchart LR
   - 고시 「건강기능식품의 기준 및 규격」은 법제처 API가 본문 없이 첨부 파일(HWP/PDF)만 제공해 제외했습니다.
 - **같은 문구는 같은 판단:** Gemma의 seed를 고정해, 같은 문구를 다시 넣어도 판단이 바뀌지 않습니다.
 
+## 시스템 구조
+
+<p align="center">
+  <img src="docs/images/architecture.png" alt="브라우저 → FastAPI 서버 → OpenSearch·Redis·Ollama, 월 1회 배치" width="100%">
+</p>
+
 ## 사용 기술
 
 | 구분 | 사용 |
