@@ -41,7 +41,7 @@
 ## 동작 흐름
 
 <p align="center">
-  <img src="docs/images/flow.png" alt="광고 문구 → 캐시 확인 → (없으면) 하이브리드 검색 → Gemma 판단 → 결과, 위반 소지가 크거나 판단이 어려우면 추천 문구" width="100%">
+  <img src="docs/images/request_flow.png" alt="광고 문구 → 캐시 확인 → (없으면) 근거 검색 → Gemma 판단 → 결과, 위반 소지가 크거나 판단이 어려우면 추천 문구" width="100%">
 </p>
 
 - **근거 자료:** 식품표시광고법·식품위생법·건강기능식품법 등 법률·시행령·시행규칙 8개와 식약처 고시 1개(법제처 OpenAPI),
